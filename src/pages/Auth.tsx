@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Sparkles, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, Loader2, Chrome } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('請輸入有效的電子郵件');
@@ -18,9 +19,10 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,6 +90,18 @@ export default function Auth() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        toast.error('Google 登入失敗', { description: error.message });
+      }
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -174,12 +188,34 @@ export default function Auth() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading}
+                disabled={loading || googleLoading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLogin ? '登入' : '註冊'}
               </Button>
             </form>
+
+            <div className="relative my-6">
+              <Separator />
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                或
+              </span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogleSignIn}
+              disabled={loading || googleLoading}
+            >
+              {googleLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Chrome className="mr-2 h-4 w-4" />
+              )}
+              使用 Google 帳號{isLogin ? '登入' : '註冊'}
+            </Button>
 
             <div className="mt-6 text-center">
               <button
