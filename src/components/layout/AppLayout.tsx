@@ -18,10 +18,13 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
+import { FlaskConical } from 'lucide-react';
+
 const navItems = [
   { path: '/today', label: '今日填寫', icon: CalendarDays },
   { path: '/history', label: '歷史紀錄', icon: History },
   { path: '/stats', label: '我的數據', icon: BarChart3 },
+  { path: '/simulation', label: '數據模擬', icon: FlaskConical },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
