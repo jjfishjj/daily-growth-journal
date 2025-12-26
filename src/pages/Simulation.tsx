@@ -713,14 +713,24 @@ export default function Simulation() {
                       {predictionResult.patterns && (
                         <div>
                           <h4 className="font-medium mb-1">發現的模式</h4>
-                          <p className="text-muted-foreground">{predictionResult.patterns}</p>
+                          <pre className="text-sm bg-secondary/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
+                            {typeof predictionResult.patterns === 'string' 
+                              ? predictionResult.patterns 
+                              : JSON.stringify(predictionResult.patterns, null, 2)}
+                          </pre>
                         </div>
                       )}
 
                       {predictionResult.insights && (
                         <div>
                           <h4 className="font-medium mb-1">深度洞察</h4>
-                          <p className="text-muted-foreground">{predictionResult.insights}</p>
+                          <pre className="text-sm bg-secondary/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap">
+                            {typeof predictionResult.insights === 'string' 
+                              ? predictionResult.insights 
+                              : Array.isArray(predictionResult.insights)
+                                ? predictionResult.insights.join('\n\n')
+                                : JSON.stringify(predictionResult.insights, null, 2)}
+                          </pre>
                         </div>
                       )}
 
