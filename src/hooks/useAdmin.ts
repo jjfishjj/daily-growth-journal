@@ -30,7 +30,6 @@ export function useAllEntries(startDate?: string, endDate?: string, userId?: str
         .from('daily_entries')
         .select(`
           *,
-          profiles!daily_entries_user_id_fkey (name, user_id),
           daily_habit_records (*)
         `)
         .order('date', { ascending: false });
