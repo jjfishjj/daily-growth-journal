@@ -2,3 +2,6 @@ project_id = "wsbvizewbormdmhzbygn"
 
 [functions.predict-habits]
 verify_jwt = false
+
+[functions.analyze-comments]
+verify_jwt = false

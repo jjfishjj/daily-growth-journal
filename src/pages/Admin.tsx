@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAllUsers, useAdminStats, useAllEntries } from '@/hooks/useAdmin';
 import { useHabits } from '@/hooks/useHabits';
+import { RoleManagement } from '@/components/admin/RoleManagement';
+import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { 
   BarChart, 
   Bar, 
@@ -25,8 +27,8 @@ import {
   Radar,
   Legend
 } from 'recharts';
-import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Calendar, BarChart3 } from 'lucide-react';
-import { format, subDays, startOfWeek, eachDayOfInterval } from 'date-fns';
+import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog } from 'lucide-react';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { useMemo } from 'react';
 
@@ -232,22 +234,18 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              總覽
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">總覽</TabsTrigger>
+            <TabsTrigger value="users">用戶</TabsTrigger>
+            <TabsTrigger value="habits">習慣</TabsTrigger>
+            <TabsTrigger value="comments">評論</TabsTrigger>
+            <TabsTrigger value="roles" className="gap-1">
+              <UserCog className="h-4 w-4" />
+              權限
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" />
-              用戶分析
-            </TabsTrigger>
-            <TabsTrigger value="habits" className="gap-2">
-              <Activity className="h-4 w-4" />
-              習慣統計
-            </TabsTrigger>
-            <TabsTrigger value="comments" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              評論分析
+            <TabsTrigger value="ai" className="gap-1">
+              <Bot className="h-4 w-4" />
+              AI
             </TabsTrigger>
           </TabsList>
 
@@ -527,6 +525,16 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Roles Tab */}
+          <TabsContent value="roles">
+            <RoleManagement />
+          </TabsContent>
+
+          {/* AI Tab */}
+          <TabsContent value="ai">
+            <AIAnalysis />
           </TabsContent>
         </Tabs>
       </div>
