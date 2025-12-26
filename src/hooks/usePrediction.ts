@@ -9,8 +9,8 @@ export interface PredictionResult {
   recommendations?: string;
   clusters?: any;
   anomalies?: any;
-  patterns?: string;
-  insights?: string;
+  patterns?: any;
+  insights?: any;
   raw?: string;
 }
 
