@@ -85,35 +85,29 @@ export function useSaveDailyEntry() {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Upsert daily entry
+      // Always insert new daily entry (allow multiple per day)
       const { data: entry, error: entryError } = await supabase
         .from('daily_entries')
-        .upsert({
+        .insert({
           user_id: user.id,
           date,
           overall_comment: overallComment
-        }, {
-          onConflict: 'user_id,date'
         })
         .select()
         .single();
 
       if (entryError) throw entryError;
 
-      // Delete existing habit records for this entry
-      await supabase
-        .from('daily_habit_records')
-        .delete()
-        .eq('daily_entry_id', entry.id);
-
-      // Insert new habit records
-      const recordsToInsert = habitRecords.map(record => ({
-        daily_entry_id: entry.id,
-        habit_id: record.habitId,
-        completed: record.completed,
-        score: record.completed && record.score ? record.score : null,
-        note: record.note || null
-      }));
+      // Insert habit records for this new entry
+      const recordsToInsert = habitRecords
+        .filter(record => record.completed) // Only save completed habits
+        .map(record => ({
+          daily_entry_id: entry.id,
+          habit_id: record.habitId,
+          completed: record.completed,
+          score: record.score || null,
+          note: record.note || null
+        }));
 
       if (recordsToInsert.length > 0) {
         const { error: recordsError } = await supabase
@@ -126,10 +120,36 @@ export function useSaveDailyEntry() {
       return entry;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['daily-entry', variables.date] });
+      queryClient.invalidateQueries({ queryKey: ['daily-entries', variables.date] });
       queryClient.invalidateQueries({ queryKey: ['history'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     }
+  });
+}
+
+// Fetch all entries for a specific date (multiple per day)
+export function useDailyEntries(date: string) {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['daily-entries', date, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('daily_entries')
+        .select(`
+          *,
+          daily_habit_records (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('date', date)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as (DailyEntry & { daily_habit_records: DailyHabitRecord[] })[];
+    },
+    enabled: !!user
   });
 }
 

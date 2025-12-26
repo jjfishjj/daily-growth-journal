@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHabits, useDailyEntry, useSaveDailyEntry } from '@/hooks/useHabits';
+import { useHabits, useDailyEntries, useSaveDailyEntry } from '@/hooks/useHabits';
 import { toast } from 'sonner';
-import { CalendarDays, Save, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { CalendarDays, Save, Loader2, Plus, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HabitState {
   completed: boolean;
@@ -20,40 +20,27 @@ interface HabitState {
 export default function Today() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const { data: habits, isLoading: habitsLoading } = useHabits();
-  const { data: existingEntry, isLoading: entryLoading } = useDailyEntry(today);
+  const { data: todayEntries, isLoading: entriesLoading } = useDailyEntries(today);
   const saveMutation = useSaveDailyEntry();
 
   const [habitStates, setHabitStates] = useState<Record<string, HabitState>>({});
   const [overallComment, setOverallComment] = useState('');
-  const [initialized, setInitialized] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
-  // Initialize states from existing entry or defaults
+  // Initialize with empty states for new entry
   useEffect(() => {
-    if (habits && !initialized) {
+    if (habits) {
       const initialStates: Record<string, HabitState> = {};
-      
       habits.forEach(habit => {
-        const existingRecord = existingEntry?.daily_habit_records?.find(
-          r => r.habit_id === habit.id
-        );
-
         initialStates[habit.id] = {
-          completed: existingRecord?.completed ?? false,
-          score: existingRecord?.score ?? null,
-          note: existingRecord?.note ?? ''
+          completed: false,
+          score: null,
+          note: ''
         };
       });
-
       setHabitStates(initialStates);
-      setOverallComment(existingEntry?.overall_comment ?? '');
-      setInitialized(true);
     }
-  }, [habits, existingEntry, initialized]);
-
-  // Reset initialized when date changes
-  useEffect(() => {
-    setInitialized(false);
-  }, [today]);
+  }, [habits]);
 
   const updateHabit = (habitId: string, updates: Partial<HabitState>) => {
     setHabitStates(prev => ({
@@ -61,7 +48,6 @@ export default function Today() {
       [habitId]: {
         ...prev[habitId],
         ...updates,
-        // Set default score when completing
         score: updates.completed && !prev[habitId]?.score 
           ? 5 
           : (updates.score ?? prev[habitId]?.score)
@@ -79,13 +65,27 @@ export default function Today() {
       note: habitStates[habit.id]?.note ?? ''
     }));
 
+    const hasCompletedHabits = habitRecords.some(r => r.completed);
+    if (!hasCompletedHabits && !overallComment.trim()) {
+      toast.error('請至少勾選一個習慣或填寫評語');
+      return;
+    }
+
     try {
       await saveMutation.mutateAsync({
         date: today,
         overallComment,
         habitRecords
       });
-      toast.success('儲存成功！', { description: '今日修行紀錄已保存' });
+      toast.success('儲存成功！', { description: '新紀錄已保存' });
+      
+      // Reset form for new entry
+      const resetStates: Record<string, HabitState> = {};
+      habits.forEach(habit => {
+        resetStates[habit.id] = { completed: false, score: null, note: '' };
+      });
+      setHabitStates(resetStates);
+      setOverallComment('');
     } catch (error) {
       toast.error('儲存失敗', { description: '請稍後再試' });
     }
@@ -108,7 +108,7 @@ export default function Today() {
     };
   }, [habits, habitStates]);
 
-  const isLoading = habitsLoading || entryLoading;
+  const isLoading = habitsLoading || entriesLoading;
 
   return (
     <AppLayout>
@@ -125,31 +125,84 @@ export default function Today() {
             </p>
           </div>
 
-          {existingEntry && (
+          {todayEntries && todayEntries.length > 0 && (
             <div className="flex items-center gap-2 text-sm text-primary">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>已填寫</span>
+              <FileText className="h-4 w-4" />
+              <span>今日已有 {todayEntries.length} 筆紀錄</span>
             </div>
           )}
         </div>
 
-        {/* Stats Summary */}
+        {/* Today's Previous Entries */}
+        {todayEntries && todayEntries.length > 0 && (
+          <Card className="border-border/50">
+            <CardHeader 
+              className="pb-3 cursor-pointer"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  今日已記錄 ({todayEntries.length})
+                </CardTitle>
+                {showHistory ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </CardHeader>
+            {showHistory && (
+              <CardContent className="space-y-3">
+                {todayEntries.map((entry, index) => (
+                  <div key={entry.id} className="p-3 bg-secondary/30 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        第 {todayEntries.length - index} 筆 • {format(new Date(entry.created_at), 'HH:mm')}
+                      </span>
+                      <span className="text-sm text-primary">
+                        {entry.daily_habit_records?.filter(r => r.completed).length || 0} 個習慣
+                      </span>
+                    </div>
+                    {entry.overall_comment && (
+                      <p className="text-sm text-foreground line-clamp-2">{entry.overall_comment}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {entry.daily_habit_records?.filter(r => r.completed).map(record => {
+                        const habit = habits?.find(h => h.id === record.habit_id);
+                        return habit ? (
+                          <span 
+                            key={record.id} 
+                            className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full"
+                          >
+                            {habit.name} {record.score && `(${record.score})`}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {/* New Entry Form */}
         <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-border/50">
-          <CardContent className="py-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              新增紀錄
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="flex items-center justify-around text-center">
               <div>
                 <div className="text-2xl font-semibold text-primary">
                   {stats.completed}/{stats.total}
                 </div>
-                <div className="text-sm text-muted-foreground">已完成</div>
+                <div className="text-sm text-muted-foreground">已選擇</div>
               </div>
               <div className="h-10 w-px bg-border" />
               <div>
-                <div className="text-2xl font-semibold text-accent flex items-center justify-center gap-1">
+                <div className="text-2xl font-semibold text-accent">
                   {stats.avgScore}
-                  {Number(stats.avgScore) >= 8 && (
-                    <Sparkles className="h-5 w-5 animate-pulse-soft" />
-                  )}
                 </div>
                 <div className="text-sm text-muted-foreground">平均分數</div>
               </div>
@@ -203,11 +256,11 @@ export default function Today() {
         {/* Overall Comment */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium">今日總評</CardTitle>
+            <CardTitle className="text-lg font-medium">本次評語</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="記錄今天的心得、感悟或反思..."
+              placeholder="記錄這次的心得、感悟或反思..."
               value={overallComment}
               onChange={(e) => setOverallComment(e.target.value)}
               className="min-h-[120px] resize-none bg-background/50"
@@ -227,7 +280,7 @@ export default function Today() {
           ) : (
             <Save className="mr-2 h-5 w-5" />
           )}
-          儲存今日紀錄
+          新增紀錄
         </Button>
       </div>
     </AppLayout>
