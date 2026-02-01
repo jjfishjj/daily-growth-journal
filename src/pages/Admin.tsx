@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -165,9 +166,9 @@ export default function Admin() {
     }));
   }, [entries]);
 
-  // Comments summary
+  // Comments summary with user info and habit scores
   const commentsSummary = useMemo(() => {
-    if (!entries) return { total: 0, withComments: 0, avgLength: 0, recentComments: [] };
+    if (!entries || !users || !habits) return { total: 0, withComments: 0, avgLength: 0, recentComments: [] };
     
     const withComments = entries.filter(e => e.overall_comment && e.overall_comment.trim().length > 0);
     const totalLength = withComments.reduce((sum, e) => sum + (e.overall_comment?.length || 0), 0);
@@ -176,12 +177,27 @@ export default function Admin() {
       total: entries.length,
       withComments: withComments.length,
       avgLength: withComments.length > 0 ? Math.round(totalLength / withComments.length) : 0,
-      recentComments: withComments.slice(0, 10).map(e => ({
-        date: e.date,
-        comment: e.overall_comment?.slice(0, 100) || ''
-      }))
+      recentComments: withComments.slice(0, 20).map(e => {
+        const user = users.find(u => u.user_id === e.user_id);
+        const habitRecords = e.daily_habit_records?.filter(r => r.completed && r.score !== null) || [];
+        const habitScores = habitRecords.map(r => {
+          const habit = habits.find(h => h.id === r.habit_id);
+          return {
+            habitName: habit?.name || '未知習慣',
+            score: r.score
+          };
+        });
+        
+        return {
+          date: e.date,
+          comment: e.overall_comment || '',
+          userName: user?.name || '未命名用戶',
+          userId: e.user_id,
+          habitScores
+        };
+      })
     };
-  }, [entries]);
+  }, [entries, users, habits]);
 
   // User engagement stats
   const engagementStats = useMemo(() => {
@@ -506,19 +522,49 @@ export default function Admin() {
             <Card>
               <CardHeader>
                 <CardTitle>近期評語</CardTitle>
-                <CardDescription>用戶填寫的日記評語摘要</CardDescription>
+                <CardDescription>用戶填寫的日記評語（含用戶與習慣分數）</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
                   {commentsSummary.recentComments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">暫無評語資料</div>
                   ) : (
                     commentsSummary.recentComments.map((item, i) => (
-                      <div key={i} className="p-4 bg-secondary/30 rounded-lg">
-                        <div className="text-sm text-muted-foreground mb-1">
-                          {format(new Date(item.date), 'yyyy/MM/dd (EEE)', { locale: zhTW })}
+                      <div key={i} className="p-4 bg-secondary/30 rounded-lg space-y-3">
+                        {/* Header: User & Date */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Users className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium">{item.userName}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(item.date), 'yyyy/MM/dd (EEE)', { locale: zhTW })}
+                          </span>
                         </div>
-                        <p className="text-foreground">{item.comment}</p>
+                        
+                        {/* Habit Scores */}
+                        {item.habitScores.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {item.habitScores.map((hs, j) => (
+                              <span 
+                                key={j} 
+                                className={cn(
+                                  "text-xs px-2 py-1 rounded-full",
+                                  hs.score && hs.score >= 7 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                                  hs.score && hs.score >= 5 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                                  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                )}
+                              >
+                                {hs.habitName}: {hs.score}分
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Comment */}
+                        <p className="text-foreground whitespace-pre-wrap">{item.comment}</p>
                       </div>
                     ))
                   )}

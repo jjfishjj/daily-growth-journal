@@ -24,6 +24,9 @@ const navItems = [
   { path: '/today', label: '今日填寫', icon: CalendarDays },
   { path: '/history', label: '歷史紀錄', icon: History },
   { path: '/stats', label: '我的數據', icon: BarChart3 },
+];
+
+const adminNavItems = [
   { path: '/simulation', label: '數據模擬', icon: FlaskConical },
 ];
 
@@ -71,16 +74,33 @@ export function AppLayout({ children }: AppLayoutProps) {
               ))}
               
               {isAdmin && (
-                <Link to="/admin">
-                  <Button
-                    variant={location.pathname === '/admin' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Shield className="h-4 w-4" />
-                    管理後台
-                  </Button>
-                </Link>
+                <>
+                  {adminNavItems.map(item => (
+                    <Link key={item.path} to={item.path}>
+                      <Button
+                        variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className={cn(
+                          'gap-2',
+                          location.pathname === item.path && 'bg-secondary'
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </Link>
+                  ))}
+                  <Link to="/admin">
+                    <Button
+                      variant={location.pathname === '/admin' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Shield className="h-4 w-4" />
+                      管理後台
+                    </Button>
+                  </Link>
+                </>
               )}
             </nav>
 
@@ -133,15 +153,32 @@ export function AppLayout({ children }: AppLayoutProps) {
               ))}
               
               {isAdmin && (
-                <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant={location.pathname === '/admin' ? 'secondary' : 'ghost'}
-                    className="w-full justify-start gap-2"
-                  >
-                    <Shield className="h-4 w-4" />
-                    管理後台
-                  </Button>
-                </Link>
+                <>
+                  {adminNavItems.map(item => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                        className="w-full justify-start gap-2"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </Link>
+                  ))}
+                  <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                    <Button
+                      variant={location.pathname === '/admin' ? 'secondary' : 'ghost'}
+                      className="w-full justify-start gap-2"
+                    >
+                      <Shield className="h-4 w-4" />
+                      管理後台
+                    </Button>
+                  </Link>
+                </>
               )}
             </nav>
           </div>
