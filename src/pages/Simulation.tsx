@@ -24,7 +24,9 @@ import {
   BarChart3,
   LineChart,
   PieChart,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useMockData } from '@/hooks/useMockData';
 import { usePrediction } from '@/hooks/usePrediction';
@@ -83,6 +85,7 @@ export default function Simulation() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<MockDailyEntry | null>(null);
   const [activeTab, setActiveTab] = useState('generate');
+  const [showHabitDetails, setShowHabitDetails] = useState(false);
 
   const handleGenerate = () => {
     generateData(parseInt(days), trendType);
@@ -360,52 +363,100 @@ export default function Simulation() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>日期</TableHead>
-                          <TableHead>完成數</TableHead>
+                          <TableHead>
+                            <div className="flex items-center gap-2">
+                              完成數
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => setShowHabitDetails(!showHabitDetails)}
+                                title={showHabitDetails ? '隱藏習慣詳情' : '顯示習慣詳情'}
+                              >
+                                {showHabitDetails ? (
+                                  <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                                ) : (
+                                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableHead>
+                          {showHabitDetails && (
+                            <TableHead className="min-w-[200px]">習慣詳情</TableHead>
+                          )}
                           <TableHead>平均分數</TableHead>
                           <TableHead>評語摘要</TableHead>
                           <TableHead className="text-right">操作</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mockEntries.slice(0, 20).map((entry) => (
-                          <TableRow key={entry.id}>
-                            <TableCell className="font-medium">
-                              {format(new Date(entry.date), 'yyyy/MM/dd (EEE)', { locale: zhTW })}
-                            </TableCell>
-                            <TableCell>
-                              {entry.completedCount}/{entry.totalHabits}
-                            </TableCell>
-                            <TableCell>
-                              <span className={`font-semibold ${
-                                entry.averageScore >= 8 ? 'text-green-600' :
-                                entry.averageScore >= 6 ? 'text-amber-600' : 'text-red-600'
-                              }`}>
-                                {entry.averageScore.toFixed(1)}
-                              </span>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              {entry.overallComment}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEdit(entry)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDelete(entry.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {mockEntries.slice(0, 20).map((entry) => {
+                          const completedHabits = entry.habitRecords.filter(r => r.completed);
+                          return (
+                            <TableRow key={entry.id}>
+                              <TableCell className="font-medium">
+                                {format(new Date(entry.date), 'yyyy/MM/dd (EEE)', { locale: zhTW })}
+                              </TableCell>
+                              <TableCell>
+                                {entry.completedCount}/{entry.totalHabits}
+                              </TableCell>
+                              {showHabitDetails && (
+                                <TableCell className="min-w-[200px]">
+                                  <div className="flex flex-wrap gap-1 max-w-[300px]">
+                                    {completedHabits.map((habit) => (
+                                      <span
+                                        key={habit.id}
+                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                          habit.score && habit.score >= 8 
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                                            : habit.score && habit.score >= 5 
+                                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' 
+                                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                        }`}
+                                        title={habit.habitName}
+                                      >
+                                        <span className="truncate max-w-[60px]">{habit.habitName}</span>
+                                        {habit.score && <span className="font-bold">{habit.score}</span>}
+                                      </span>
+                                    ))}
+                                    {completedHabits.length === 0 && (
+                                      <span className="text-muted-foreground text-xs">無完成習慣</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              )}
+                              <TableCell>
+                                <span className={`font-semibold ${
+                                  entry.averageScore >= 8 ? 'text-green-600 dark:text-green-400' :
+                                  entry.averageScore >= 6 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                                }`}>
+                                  {entry.averageScore.toFixed(1)}
+                                </span>
+                              </TableCell>
+                              <TableCell className="max-w-xs truncate">
+                                {entry.overallComment}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(entry)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDelete(entry.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                     {mockEntries.length > 20 && (
