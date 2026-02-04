@@ -6,6 +6,7 @@ import { useAllUsers, useAdminStats, useAllEntries } from '@/hooks/useAdmin';
 import { useHabits } from '@/hooks/useHabits';
 import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
+import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
 import { 
   BarChart, 
   Bar, 
@@ -28,7 +29,7 @@ import {
   Radar,
   Legend
 } from 'recharts';
-import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award } from 'lucide-react';
+import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database } from 'lucide-react';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { useMemo } from 'react';
@@ -390,7 +391,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">總覽</TabsTrigger>
             <TabsTrigger value="leaderboard" className="gap-1">
               <Trophy className="h-4 w-4" />
@@ -406,6 +407,10 @@ export default function Admin() {
             <TabsTrigger value="ai" className="gap-1">
               <Bot className="h-4 w-4" />
               AI
+            </TabsTrigger>
+            <TabsTrigger value="mock" className="gap-1">
+              <Database className="h-4 w-4" />
+              模擬數據
             </TabsTrigger>
           </TabsList>
 
@@ -928,6 +933,11 @@ export default function Admin() {
           {/* AI Tab */}
           <TabsContent value="ai">
             <AIAnalysis />
+          </TabsContent>
+
+          {/* Mock Data Tab */}
+          <TabsContent value="mock">
+            <MockDataSimulation />
           </TabsContent>
         </Tabs>
       </div>
