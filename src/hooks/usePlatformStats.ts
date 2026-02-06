@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PlatformStats {
@@ -21,6 +22,33 @@ interface DbPlatformStats {
 }
 
 export function usePlatformStats() {
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime changes for instant updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('platform-stats-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'daily_entries' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'daily_habit_records' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['platform-stats'],
     queryFn: async (): Promise<PlatformStats> => {
@@ -68,6 +96,6 @@ export function usePlatformStats() {
         topHabit
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 30 * 1000, // 30 seconds cache (shorter for near-realtime feel)
   });
 }
