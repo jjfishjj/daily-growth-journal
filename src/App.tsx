@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Today from "./pages/Today";
 import History from "./pages/History";
 import Stats from "./pages/Stats";
+import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
 import NotFound from "./pages/NotFound";
@@ -49,6 +50,7 @@ function AppRoutes() {
       <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
       <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
+      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
       <Route path="/simulation" element={<ProtectedRoute><AdminRoute><Simulation /></AdminRoute></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
