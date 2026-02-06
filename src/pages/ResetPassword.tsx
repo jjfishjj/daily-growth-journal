@@ -22,8 +22,6 @@ export default function ResetPassword() {
   // Check if we have a valid session from the reset link
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       // If there's an error in URL params, show it
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
@@ -36,8 +34,41 @@ export default function ResetPassword() {
         return;
       }
 
-      // If no session and no hash fragment (meaning no recovery token), redirect
-      if (!session && !window.location.hash.includes('access_token')) {
+      // Check for hash fragment with access_token (Supabase recovery token)
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        // Parse the hash to extract the token and set the session
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+        
+        if (type === 'recovery' && accessToken && refreshToken) {
+          // Set the session with the recovery tokens
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (sessionError) {
+            toast.error('重設密碼失敗', { 
+              description: '連結已過期或無效，請重新申請' 
+            });
+            navigate('/auth');
+            return;
+          }
+          
+          // Clear the hash from URL for cleaner appearance
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
+      }
+
+      // Check for existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If no session and no recovery token, redirect
+      if (!session) {
         toast.error('請先點擊郵件中的重設密碼連結');
         navigate('/auth');
       }
