@@ -16,14 +16,16 @@ const nameSchema = z.string().min(1, '請輸入您的名稱');
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPasswordForEmail, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -94,6 +96,31 @@ export default function Auth() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      setErrors({ email: emailResult.error.errors[0].message });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await resetPasswordForEmail(email);
+      if (error) {
+        toast.error('發送失敗', { description: error.message });
+        return;
+      }
+      setResetEmailSent(true);
+      toast.success('重設密碼郵件已發送！', { 
+        description: '請檢查您的電子郵件信箱' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
@@ -101,7 +128,31 @@ export default function Auth() {
         redirect_uri: window.location.origin,
       });
       if (error) {
-        toast.error('Google 登入失敗', { description: error.message });
+        // Enhanced error handling for Google OAuth
+        let errorMessage = error.message;
+        let errorDescription = '請稍後再試';
+        
+        if (error.message.includes('popup_closed')) {
+          errorDescription = '登入視窗已關閉，請重新嘗試';
+        } else if (error.message.includes('access_denied')) {
+          errorDescription = '您拒絕了授權請求，請允許存取以完成登入';
+        } else if (error.message.includes('network')) {
+          errorDescription = '網路連線問題，請檢查您的網路連線後重試';
+        } else if (error.message.includes('timeout')) {
+          errorDescription = '連線逾時，請稍後再試';
+        } else if (error.message.includes('invalid_client')) {
+          errorDescription = 'Google 登入設定有問題，請聯繫管理員';
+        } else if (error.message.includes('server_error')) {
+          errorDescription = 'Google 伺服器暫時無法使用，請使用電子郵件登入或稍後再試';
+        }
+        
+        toast.error('Google 登入失敗', { 
+          description: errorDescription,
+          action: {
+            label: '使用郵件登入',
+            onClick: () => setShowForgotPassword(false)
+          }
+        });
       }
     } finally {
       setGoogleLoading(false);
@@ -128,110 +179,203 @@ export default function Auth() {
         <Card className="shadow-card-zen border-border/50 animate-slide-up">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-xl">
-              {isLogin ? '登入帳號' : '建立帳號'}
+              {showForgotPassword 
+                ? '忘記密碼' 
+                : isLogin 
+                  ? '登入帳號' 
+                  : '建立帳號'}
             </CardTitle>
             <CardDescription>
-              {isLogin 
-                ? '登入以記錄您的每日修行' 
-                : '開始您的自我成長之旅'}
+              {showForgotPassword
+                ? '輸入您的電子郵件，我們會發送重設密碼連結'
+                : isLogin 
+                  ? '登入以記錄您的每日修行' 
+                  : '開始您的自我成長之旅'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="您的名稱"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
-                    />
+            {showForgotPassword ? (
+              // Forgot Password Form
+              resetEmailSent ? (
+                <div className="text-center py-4">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
+                    <Mail className="h-6 w-6 text-primary" />
                   </div>
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
-                  )}
+                  <h3 className="font-medium mb-2">郵件已發送！</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    請檢查 <span className="font-medium">{email}</span> 的收件匣，<br />
+                    點擊郵件中的連結重設密碼
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    沒收到郵件？請檢查垃圾郵件資料夾
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setResetEmailSent(false);
+                    }}
+                    className="w-full"
+                  >
+                    返回登入
+                  </Button>
                 </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="電子郵件"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="密碼"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || googleLoading}
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLogin ? '登入' : '註冊'}
-              </Button>
-            </form>
-
-            <div className="relative my-6">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                或
-              </span>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignIn}
-              disabled={loading || googleLoading}
-            >
-              {googleLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Chrome className="mr-2 h-4 w-4" />
-              )}
-              使用 Google 帳號{isLogin ? '登入' : '註冊'}
-            </Button>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        placeholder="電子郵件"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
+                  </div>
 
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isLogin ? '還沒有帳號？立即註冊' : '已有帳號？立即登入'}
-              </button>
-            </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    發送重設密碼郵件
+                  </Button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setErrors({});
+                      }}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      返回登入
+                    </button>
+                  </div>
+                </form>
+              )
+            ) : (
+              // Login/Signup Form
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {!isLogin && (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          placeholder="您的名稱"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      {errors.name && (
+                        <p className="text-sm text-destructive">{errors.name}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        placeholder="電子郵件"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="password"
+                        placeholder="密碼"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    {errors.password && (
+                      <p className="text-sm text-destructive">{errors.password}</p>
+                    )}
+                  </div>
+
+                  {isLogin && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setErrors({});
+                        }}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        忘記密碼？
+                      </button>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || googleLoading}
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLogin ? '登入' : '註冊'}
+                  </Button>
+                </form>
+
+                <div className="relative my-6">
+                  <Separator />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                    或
+                  </span>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleSignIn}
+                  disabled={loading || googleLoading}
+                >
+                  {googleLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Chrome className="mr-2 h-4 w-4" />
+                  )}
+                  使用 Google 帳號{isLogin ? '登入' : '註冊'}
+                </Button>
+
+                <div className="mt-6 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setErrors({});
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {isLogin ? '還沒有帳號？立即註冊' : '已有帳號？立即登入'}
+                  </button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
