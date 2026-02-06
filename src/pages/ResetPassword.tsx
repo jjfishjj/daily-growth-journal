@@ -15,6 +15,8 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [validSession, setValidSession] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -22,6 +24,10 @@ export default function ResetPassword() {
   // Check if we have a valid session from the reset link
   useEffect(() => {
     const checkSession = async () => {
+      console.log('Checking reset password session...');
+      console.log('URL:', window.location.href);
+      console.log('Hash:', window.location.hash);
+      
       // If there's an error in URL params, show it
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
@@ -34,16 +40,36 @@ export default function ResetPassword() {
         return;
       }
 
+      // Check if we're in recovery mode (set by auth state change)
+      const recoveryMode = sessionStorage.getItem('password_recovery_mode');
+      if (recoveryMode === 'true') {
+        console.log('Recovery mode detected from session storage');
+        // Clear the flag
+        sessionStorage.removeItem('password_recovery_mode');
+        
+        // Check for existing session (should be set by Supabase auth callback)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('Valid session found in recovery mode');
+          setValidSession(true);
+          setChecking(false);
+          return;
+        }
+      }
+
       // Check for hash fragment with access_token (Supabase recovery token)
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
+        console.log('Found access_token in hash');
         // Parse the hash to extract the token and set the session
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
         const type = params.get('type');
         
-        if (type === 'recovery' && accessToken && refreshToken) {
+        console.log('Token type:', type);
+        
+        if (accessToken && refreshToken) {
           // Set the session with the recovery tokens
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -51,6 +77,7 @@ export default function ResetPassword() {
           });
           
           if (sessionError) {
+            console.error('Session error:', sessionError);
             toast.error('重設密碼失敗', { 
               description: '連結已過期或無效，請重新申請' 
             });
@@ -58,20 +85,41 @@ export default function ResetPassword() {
             return;
           }
           
+          console.log('Session set successfully');
           // Clear the hash from URL for cleaner appearance
           window.history.replaceState(null, '', window.location.pathname);
+          setValidSession(true);
+          setChecking(false);
           return;
         }
       }
 
       // Check for existing session
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Existing session:', !!session);
       
-      // If no session and no recovery token, redirect
-      if (!session) {
-        toast.error('請先點擊郵件中的重設密碼連結');
-        navigate('/auth');
+      // If we have a session, allow password reset
+      if (session) {
+        setValidSession(true);
+        setChecking(false);
+        return;
       }
+      
+      // Wait a bit for auth state to settle (Supabase might still be processing)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check again after delay
+      const { data: { session: delayedSession } } = await supabase.auth.getSession();
+      if (delayedSession) {
+        setValidSession(true);
+        setChecking(false);
+        return;
+      }
+      
+      // No valid session found
+      console.log('No valid session found');
+      toast.error('請先點擊郵件中的重設密碼連結');
+      navigate('/auth');
     };
 
     checkSession();
@@ -121,6 +169,21 @@ export default function ResetPassword() {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking session
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gradient-morning flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-card-zen border-border/50 animate-slide-up">
+          <CardContent className="pt-8 pb-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <h2 className="text-xl font-semibold mb-2">驗證中...</h2>
+            <p className="text-muted-foreground">正在驗證您的重設密碼連結</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (success) {
     return (
