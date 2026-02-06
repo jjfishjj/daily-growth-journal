@@ -7,6 +7,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
+import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
   Bar, 
@@ -32,7 +33,7 @@ import {
 import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database } from 'lucide-react';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
@@ -417,46 +418,62 @@ export default function Admin() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Activity Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>近兩週活動趨勢</CardTitle>
-                </CardHeader>
-                <CardContent className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={activityData}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="date" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                      <Legend />
-                      <Area type="monotone" dataKey="紀錄數" stackId="1" stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.6} />
-                      <Area type="monotone" dataKey="習慣完成數" stackId="2" stroke={CHART_COLORS[1]} fill={CHART_COLORS[1]} fillOpacity={0.6} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {/* Activity Timeline - Switchable */}
+              <SwitchableChart
+                data={activityData}
+                dataKey="紀錄數"
+                secondaryDataKey="習慣完成數"
+                nameKey="date"
+                title="近兩週活動趨勢"
+                description="紀錄數與習慣完成數對比"
+                chartTypes={['area', 'line', 'bar']}
+                defaultType="area"
+                dataSourceTab="用戶"
+                height={280}
+                showLegend
+              />
 
-              {/* Habit Completion Rate */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>各習慣完成率 (%)</CardTitle>
-                </CardHeader>
-                <CardContent className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={habitChartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis type="number" domain={[0, 100]} className="text-xs" />
-                      <YAxis dataKey="name" type="category" width={60} className="text-xs" />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
-                        formatter={(value, name, props) => [value, props.payload.fullName]}
-                      />
-                      <Bar dataKey="完成率" fill={CHART_COLORS[0]} radius={4} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {/* Habit Completion Rate - Switchable */}
+              <SwitchableChart
+                data={habitChartData}
+                dataKey="完成率"
+                nameKey="name"
+                title="各習慣完成率 (%)"
+                description="依習慣類型統計"
+                chartTypes={['bar', 'pie', 'radar']}
+                defaultType="bar"
+                dataSourceTab="習慣"
+                height={280}
+                layout="vertical"
+                domain={[0, 100]}
+              />
+
+              {/* Score Distribution - Switchable */}
+              <SwitchableChart
+                data={scoreDistributionData}
+                dataKey="value"
+                nameKey="name"
+                title="分數分佈"
+                description="所有評分的分佈情況"
+                chartTypes={['pie', 'bar', 'radar']}
+                defaultType="pie"
+                dataSourceTab="習慣"
+                height={280}
+              />
+
+              {/* Weekday Radar - Switchable */}
+              <SwitchableChart
+                data={weekdayData}
+                dataKey="完成率"
+                nameKey="day"
+                title="各星期習慣完成率"
+                description="週間表現分佈"
+                chartTypes={['radar', 'bar', 'line']}
+                defaultType="radar"
+                dataSourceTab="習慣"
+                height={280}
+                domain={[0, 100]}
+              />
             </div>
 
             {/* Recent Entries with User & Habit Details */}
