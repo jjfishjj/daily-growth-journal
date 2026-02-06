@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Today from "./pages/Today";
 import History from "./pages/History";
 import Stats from "./pages/Stats";
@@ -46,6 +47,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Navigate to="/today" replace />} />
       <Route path="/today" element={<ProtectedRoute><Today /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
