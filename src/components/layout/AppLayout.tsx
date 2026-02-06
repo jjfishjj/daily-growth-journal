@@ -10,7 +10,9 @@ import {
   LogOut, 
   Menu, 
   X,
-  Sparkles
+  Sparkles,
+  Users,
+  FlaskConical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,12 +20,11 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-import { FlaskConical } from 'lucide-react';
-
 const navItems = [
   { path: '/today', label: '今日填寫', icon: CalendarDays },
   { path: '/history', label: '歷史紀錄', icon: History },
   { path: '/stats', label: '我的數據', icon: BarChart3 },
+  { path: '/community', label: '平台動態', icon: Users },
 ];
 
 const adminNavItems = [
