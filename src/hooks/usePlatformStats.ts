@@ -11,127 +11,48 @@ export interface PlatformStats {
   topHabit: { name: string; avgScore: number } | null;
 }
 
+interface DbPlatformStats {
+  totalUsers: number;
+  totalEntries: number;
+  overallAvgScore: number;
+  popularHabits: { habit_id: string; habit_name: string; completion_count: number; avg_score: number }[];
+  bestPracticeTimes: { hour: number; count: number }[];
+  activeMembers: { user_id: string; user_name: string; entry_count: number; avg_score: number }[];
+}
+
 export function usePlatformStats() {
   return useQuery({
     queryKey: ['platform-stats'],
     queryFn: async (): Promise<PlatformStats> => {
-      // Get all habits
-      const { data: habits } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('is_active', true);
-
-      // Get total user count
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Get total entries count
-      const { count: entriesCount } = await supabase
-        .from('daily_entries')
-        .select('*', { count: 'exact', head: true });
-
-      // Get habit records with entries for aggregation
-      const { data: entries } = await supabase
-        .from('daily_entries')
-        .select(`
-          id,
-          user_id,
-          date,
-          created_at,
-          daily_habit_records (
-            habit_id,
-            completed,
-            score
-          )
-        `)
-        .order('date', { ascending: false })
-        .limit(500);
-
-      // Get profiles for user names
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, name');
-
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.name]) || []);
-
-      // Calculate popular habits
-      const habitStats: Record<string, { count: number; totalScore: number; scoreCount: number }> = {};
+      // Use the database function that any authenticated user can call
+      const { data, error } = await supabase.rpc('get_platform_stats');
       
-      entries?.forEach(entry => {
-        entry.daily_habit_records?.forEach(record => {
-          if (!habitStats[record.habit_id]) {
-            habitStats[record.habit_id] = { count: 0, totalScore: 0, scoreCount: 0 };
-          }
-          if (record.completed) {
-            habitStats[record.habit_id].count++;
-            if (record.score) {
-              habitStats[record.habit_id].totalScore += record.score;
-              habitStats[record.habit_id].scoreCount++;
-            }
-          }
-        });
-      });
+      if (error) {
+        console.error('Error fetching platform stats:', error);
+        throw error;
+      }
 
-      const popularHabits = Object.entries(habitStats)
-        .map(([habitId, stats]) => ({
-          habitId,
-          habitName: habits?.find(h => h.id === habitId)?.name || '未知習慣',
-          completionCount: stats.count,
-          avgScore: stats.scoreCount > 0 ? stats.totalScore / stats.scoreCount : 0
-        }))
-        .sort((a, b) => b.completionCount - a.completionCount)
-        .slice(0, 10);
-
-      // Calculate best practice times (by hour of creation)
-      const hourStats: Record<number, number> = {};
-      entries?.forEach(entry => {
-        const hour = new Date(entry.created_at).getHours();
-        hourStats[hour] = (hourStats[hour] || 0) + 1;
-      });
-
-      const bestPracticeTimes = Object.entries(hourStats)
-        .map(([hour, count]) => ({ hour: parseInt(hour), count }))
-        .sort((a, b) => b.count - a.count);
-
-      // Calculate active members
-      const userStats: Record<string, { count: number; totalScore: number; scoreCount: number }> = {};
+      const stats = data as unknown as DbPlatformStats;
       
-      entries?.forEach(entry => {
-        if (!userStats[entry.user_id]) {
-          userStats[entry.user_id] = { count: 0, totalScore: 0, scoreCount: 0 };
-        }
-        userStats[entry.user_id].count++;
-        
-        entry.daily_habit_records?.forEach(record => {
-          if (record.completed && record.score) {
-            userStats[entry.user_id].totalScore += record.score;
-            userStats[entry.user_id].scoreCount++;
-          }
-        });
-      });
+      // Transform the data to match the expected interface
+      const popularHabits = (stats.popularHabits || []).map(h => ({
+        habitId: h.habit_id,
+        habitName: h.habit_name,
+        completionCount: Number(h.completion_count),
+        avgScore: Number(h.avg_score)
+      }));
 
-      const activeMembers = Object.entries(userStats)
-        .map(([userId, stats]) => ({
-          userId,
-          userName: profileMap.get(userId) || '匿名用戶',
-          entryCount: stats.count,
-          avgScore: stats.scoreCount > 0 ? stats.totalScore / stats.scoreCount : 0
-        }))
-        .sort((a, b) => b.entryCount - a.entryCount)
-        .slice(0, 10);
+      const bestPracticeTimes = (stats.bestPracticeTimes || []).map(t => ({
+        hour: Number(t.hour),
+        count: Number(t.count)
+      }));
 
-      // Calculate overall average score
-      let totalScore = 0;
-      let scoreCount = 0;
-      entries?.forEach(entry => {
-        entry.daily_habit_records?.forEach(record => {
-          if (record.completed && record.score) {
-            totalScore += record.score;
-            scoreCount++;
-          }
-        });
-      });
+      const activeMembers = (stats.activeMembers || []).map(m => ({
+        userId: m.user_id,
+        userName: m.user_name,
+        entryCount: Number(m.entry_count),
+        avgScore: Number(m.avg_score)
+      }));
 
       const topHabit = popularHabits.length > 0 
         ? { name: popularHabits[0].habitName, avgScore: popularHabits[0].avgScore }
@@ -141,9 +62,9 @@ export function usePlatformStats() {
         popularHabits,
         bestPracticeTimes,
         activeMembers,
-        totalUsers: usersCount || 0,
-        totalEntries: entriesCount || 0,
-        overallAvgScore: scoreCount > 0 ? totalScore / scoreCount : 0,
+        totalUsers: stats.totalUsers || 0,
+        totalEntries: stats.totalEntries || 0,
+        overallAvgScore: Number(stats.overallAvgScore) || 0,
         topHabit
       };
     },
