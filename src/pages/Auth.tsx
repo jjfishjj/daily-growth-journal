@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Sparkles, Mail, Lock, User, Loader2, Chrome } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, Loader2, Chrome, CheckCircle2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
 
@@ -19,11 +19,13 @@ export default function Auth() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; name?: string }>({});
   
   const { signIn, signUp, signInWithGoogle, resetPasswordForEmail, user } = useAuth();
   const navigate = useNavigate();
@@ -52,6 +54,11 @@ export default function Auth() {
       if (!nameResult.success) {
         newErrors.name = nameResult.error.errors[0].message;
       }
+
+      // 確認密碼驗證
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = '兩次輸入的密碼不一致';
+      }
     }
 
     setErrors(newErrors);
@@ -71,6 +78,8 @@ export default function Auth() {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('登入失敗', { description: '電子郵件或密碼錯誤' });
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('登入失敗', { description: '請先驗證您的電子郵件' });
           } else {
             toast.error('登入失敗', { description: error.message });
           }
@@ -88,8 +97,11 @@ export default function Auth() {
           }
           return;
         }
-        toast.success('註冊成功！', { description: '歡迎加入修行之旅' });
-        navigate('/today');
+        // 顯示驗證郵件提示
+        setSignupSuccess(true);
+        toast.success('註冊成功！', { 
+          description: '請檢查您的電子郵件以完成驗證' 
+        });
       }
     } finally {
       setLoading(false);
@@ -129,7 +141,6 @@ export default function Auth() {
       });
       if (error) {
         // Enhanced error handling for Google OAuth
-        let errorMessage = error.message;
         let errorDescription = '請稍後再試';
         
         if (error.message.includes('popup_closed')) {
@@ -158,6 +169,42 @@ export default function Auth() {
       setGoogleLoading(false);
     }
   };
+
+  // 註冊成功畫面 - 顯示驗證郵件提示
+  if (signupSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-morning flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-card-zen border-border/50 animate-slide-up">
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+              <CheckCircle2 className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">註冊成功！</h2>
+            <p className="text-muted-foreground mb-4">
+              我們已發送驗證郵件至<br />
+              <span className="font-medium text-foreground">{email}</span>
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              請點擊郵件中的連結來完成驗證後登入。<br />
+              如果沒收到郵件，請檢查垃圾郵件資料夾。
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSignupSuccess(false);
+                setIsLogin(true);
+                setPassword('');
+                setConfirmPassword('');
+              }}
+              className="w-full"
+            >
+              返回登入頁面
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-morning flex items-center justify-center p-4">
@@ -304,7 +351,7 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="password"
-                        placeholder="密碼"
+                        placeholder="密碼（至少 6 個字元）"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10"
@@ -314,6 +361,25 @@ export default function Auth() {
                       <p className="text-sm text-destructive">{errors.password}</p>
                     )}
                   </div>
+
+                  {/* 確認密碼欄位 - 僅註冊時顯示 */}
+                  {!isLogin && (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="確認密碼"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                  )}
 
                   {isLogin && (
                     <div className="text-right">
@@ -368,6 +434,7 @@ export default function Auth() {
                     onClick={() => {
                       setIsLogin(!isLogin);
                       setErrors({});
+                      setConfirmPassword('');
                     }}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
