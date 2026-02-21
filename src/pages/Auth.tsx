@@ -136,34 +136,10 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Check if we're on the published domain (not preview)
-      const isPublishedDomain = window.location.hostname === 'guanshin.lovable.app' ||
-        (!window.location.hostname.includes('preview') && window.location.hostname.endsWith('.lovable.app'));
-
-      if (isPublishedDomain) {
-        // On published domain, bypass auth-bridge to avoid redirect loop
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth`,
-            skipBrowserRedirect: true,
-          },
-        });
-
-        if (error) throw error;
-
-        if (data?.url) {
-          window.location.href = data.url;
-          return;
-        }
-      } else {
-        // For preview domains, use Lovable managed OAuth
-        const { error } = await lovable.auth.signInWithOAuth('google', {
-          redirect_uri: window.location.origin,
-        });
-        if (error) throw error;
-      }
+      const { error } = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (error) throw error;
     } catch (err: any) {
       const error = err as Error;
       let errorDescription = '請稍後再試';
