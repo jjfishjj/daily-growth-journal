@@ -136,35 +136,59 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (error) {
-        // Enhanced error handling for Google OAuth
-        let errorDescription = '請稍後再試';
-        
-        if (error.message.includes('popup_closed')) {
-          errorDescription = '登入視窗已關閉，請重新嘗試';
-        } else if (error.message.includes('access_denied')) {
-          errorDescription = '您拒絕了授權請求，請允許存取以完成登入';
-        } else if (error.message.includes('network')) {
-          errorDescription = '網路連線問題，請檢查您的網路連線後重試';
-        } else if (error.message.includes('timeout')) {
-          errorDescription = '連線逾時，請稍後再試';
-        } else if (error.message.includes('invalid_client')) {
-          errorDescription = 'Google 登入設定有問題，請聯繫管理員';
-        } else if (error.message.includes('server_error')) {
-          errorDescription = 'Google 伺服器暫時無法使用，請使用電子郵件登入或稍後再試';
-        }
-        
-        toast.error('Google 登入失敗', { 
-          description: errorDescription,
-          action: {
-            label: '使用郵件登入',
-            onClick: () => setShowForgotPassword(false)
-          }
+      // Check if we're on the published domain (not preview)
+      const isPublishedDomain = window.location.hostname === 'guanshin.lovable.app' ||
+        (!window.location.hostname.includes('preview') && window.location.hostname.endsWith('.lovable.app'));
+
+      if (isPublishedDomain) {
+        // On published domain, bypass auth-bridge to avoid redirect loop
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/today`,
+            skipBrowserRedirect: true,
+          },
         });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        // For preview domains, use Lovable managed OAuth
+        const { error } = await lovable.auth.signInWithOAuth('google', {
+          redirect_uri: window.location.origin,
+        });
+        if (error) throw error;
       }
+    } catch (err: any) {
+      const error = err as Error;
+      let errorDescription = '請稍後再試';
+      
+      if (error.message?.includes('popup_closed')) {
+        errorDescription = '登入視窗已關閉，請重新嘗試';
+      } else if (error.message?.includes('access_denied')) {
+        errorDescription = '您拒絕了授權請求，請允許存取以完成登入';
+      } else if (error.message?.includes('network')) {
+        errorDescription = '網路連線問題，請檢查您的網路連線後重試';
+      } else if (error.message?.includes('timeout')) {
+        errorDescription = '連線逾時，請稍後再試';
+      } else if (error.message?.includes('invalid_client')) {
+        errorDescription = 'Google 登入設定有問題，請聯繫管理員';
+      } else if (error.message?.includes('server_error')) {
+        errorDescription = 'Google 伺服器暫時無法使用，請使用電子郵件登入或稍後再試';
+      }
+      
+      toast.error('Google 登入失敗', { 
+        description: errorDescription,
+        action: {
+          label: '使用郵件登入',
+          onClick: () => setShowForgotPassword(false)
+        }
+      });
     } finally {
       setGoogleLoading(false);
     }
