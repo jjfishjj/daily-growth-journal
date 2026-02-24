@@ -26,6 +26,7 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; name?: string }>({});
   
   const { signIn, signUp, signInWithGoogle, resetPasswordForEmail, user } = useAuth();
@@ -42,6 +43,13 @@ export default function Auth() {
     const cleanup = initScrollTracking();
     return cleanup;
   }, []);
+
+  // 重設密碼冷卻計時器
+  useEffect(() => {
+    if (resetCooldown <= 0) return;
+    const timer = setTimeout(() => setResetCooldown(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resetCooldown]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -126,6 +134,11 @@ export default function Auth() {
       return;
     }
 
+    if (resetCooldown > 0) {
+      toast.error('請稍候', { description: `請等待 ${resetCooldown} 秒後再試` });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await resetPasswordForEmail(email);
@@ -134,6 +147,7 @@ export default function Auth() {
         return;
       }
       setResetEmailSent(true);
+      setResetCooldown(60); // 60 秒冷卻時間
       toast.success('重設密碼郵件已發送！', { 
         description: '請檢查您的電子郵件信箱' 
       });
@@ -298,10 +312,10 @@ export default function Auth() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={loading}
+                    disabled={loading || resetCooldown > 0}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    發送重設密碼郵件
+                    {resetCooldown > 0 ? `請等待 ${resetCooldown} 秒` : '發送重設密碼郵件'}
                   </Button>
 
                   <div className="text-center">
