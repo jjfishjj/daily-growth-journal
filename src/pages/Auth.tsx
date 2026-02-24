@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Sparkles, Mail, Lock, User, Loader2, Chrome, CheckCircle2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
+import { trackEvent, GA_EVENTS, initScrollTracking } from '@/lib/analytics';
 
 const emailSchema = z.string().email('請輸入有效的電子郵件');
 const passwordSchema = z.string().min(6, '密碼至少需要 6 個字元');
@@ -35,6 +36,12 @@ export default function Auth() {
       navigate('/today');
     }
   }, [user, navigate]);
+
+  // 初始化滾動深度追蹤
+  useEffect(() => {
+    const cleanup = initScrollTracking();
+    return cleanup;
+  }, []);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -74,6 +81,7 @@ export default function Auth() {
 
     try {
       if (isLogin) {
+        trackEvent(GA_EVENTS.SUBMIT_LOGIN);
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
@@ -88,6 +96,7 @@ export default function Auth() {
         toast.success('歡迎回來！', { description: '開始記錄今天的修行吧' });
         navigate('/today');
       } else {
+        trackEvent(GA_EVENTS.SUBMIT_SIGNUP);
         const { error } = await signUp(email, password, name);
         if (error) {
           if (error.message.includes('already registered')) {
@@ -134,6 +143,7 @@ export default function Auth() {
   };
 
   const handleGoogleSignIn = async () => {
+    trackEvent(GA_EVENTS.CLICK_GOOGLE_SIGNIN, { mode: isLogin ? 'login' : 'signup' });
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth('google', {
@@ -386,6 +396,7 @@ export default function Auth() {
                       <button
                         type="button"
                         onClick={() => {
+                          trackEvent(GA_EVENTS.CLICK_FORGOT_PASSWORD);
                           setShowForgotPassword(true);
                           setErrors({});
                         }}
@@ -432,6 +443,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => {
+                      trackEvent(isLogin ? GA_EVENTS.CLICK_SWITCH_TO_SIGNUP : GA_EVENTS.CLICK_SWITCH_TO_LOGIN);
                       setIsLogin(!isLogin);
                       setErrors({});
                       setConfirmPassword('');
