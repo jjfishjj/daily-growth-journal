@@ -31,6 +31,7 @@ import {
   Legend
 } from 'recharts';
 import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database } from 'lucide-react';
+import { DataDownload } from '@/components/admin/DownloadButtons';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { useMemo, useState, useCallback } from 'react';
@@ -582,10 +583,22 @@ export default function Admin() {
             {/* User Rankings */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  會員排行榜
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    會員排行榜
+                  </CardTitle>
+                  <DataDownload
+                    data={userLeaderboard.map((u, i) => ({
+                      排名: i + 1,
+                      用戶名稱: u.userName,
+                      紀錄數: u.totalEntries,
+                      完成習慣數: u.completedHabits,
+                      平均分數: u.avgScore.toFixed(1)
+                    }))}
+                    filename="會員排行榜"
+                  />
+                </div>
                 <CardDescription>依平均分數排名，含各習慣分數細節</CardDescription>
               </CardHeader>
               <CardContent>
@@ -657,7 +670,22 @@ export default function Admin() {
             {/* Score Distribution by Habit */}
             <Card>
               <CardHeader>
-                <CardTitle>各習慣分數分佈</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>各習慣分數分佈</CardTitle>
+                  <DataDownload
+                    data={habitScoreDetails.map(h => ({
+                      習慣名稱: h.habitName,
+                      平均分: h.avgScore.toFixed(1),
+                      評分次數: h.totalScores,
+                      '1-2分': h.distribution['1-2'],
+                      '3-4分': h.distribution['3-4'],
+                      '5-6分': h.distribution['5-6'],
+                      '7-8分': h.distribution['7-8'],
+                      '9-10分': h.distribution['9-10']
+                    }))}
+                    filename="習慣分數分佈"
+                  />
+                </div>
                 <CardDescription>每個習慣的分數細節與分佈</CardDescription>
               </CardHeader>
               <CardContent>
@@ -746,7 +774,13 @@ export default function Admin() {
             {/* User List */}
             <Card>
               <CardHeader>
-                <CardTitle>用戶列表</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>用戶列表</CardTitle>
+                  <DataDownload
+                    data={(users || []).map(u => ({ 名稱: u.name || '未命名', ID: u.user_id, 註冊日期: u.created_at.slice(0, 10) }))}
+                    filename="用戶列表"
+                  />
+                </div>
                 <CardDescription>所有註冊用戶（共 {users?.length || 0} 位）</CardDescription>
               </CardHeader>
               <CardContent>
@@ -825,7 +859,19 @@ export default function Admin() {
             {/* Habit Stats Table */}
             <Card>
               <CardHeader>
-                <CardTitle>習慣詳細統計</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>習慣詳細統計</CardTitle>
+                  <DataDownload
+                    data={(stats?.habitStats || []).map(s => ({
+                      習慣名稱: s.habit.name,
+                      總紀錄數: s.totalRecords,
+                      完成數: s.completedCount,
+                      完成率: `${s.completionRate.toFixed(0)}%`,
+                      平均分數: s.avgScore.toFixed(1)
+                    }))}
+                    filename="習慣統計"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -890,7 +936,18 @@ export default function Admin() {
 
             <Card>
               <CardHeader>
-                <CardTitle>近期評語</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>近期評語</CardTitle>
+                  <DataDownload
+                    data={commentsSummary.recentComments.map(c => ({
+                      用戶: c.userName,
+                      日期: c.date,
+                      評語: c.comment,
+                      習慣分數: c.habitScores.map(hs => `${hs.habitName}:${hs.score}`).join('; ')
+                    }))}
+                    filename="近期評語"
+                  />
+                </div>
                 <CardDescription>用戶填寫的日記評語（含用戶與習慣分數）</CardDescription>
               </CardHeader>
               <CardContent>
