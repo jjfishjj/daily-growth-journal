@@ -145,18 +145,129 @@ export function GuanxinMockSimulation() {
     };
   }, [mockData]);
 
+  const settingsPanel = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Settings className="h-4 w-4" /> 模擬參數設定
+        </CardTitle>
+        <CardDescription>調整以下參數來自訂模擬數據的生成方式</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Row 1: User count & month */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>模擬人數</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={[userCount]}
+                onValueChange={v => setUserCount(v[0])}
+                min={5}
+                max={100}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-12 text-right">{userCount} 人</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>起始月份</Label>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MONTH_OPTIONS.map(m => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>時間長度</Label>
+            <Select value={String(durationMonths)} onValueChange={v => setDurationMonths(Number(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 6, 12].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n} 個月</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Row 2: Fill rate & leave rate */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>填寫率範圍（每人隨機）</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={fillRateRange}
+                onValueChange={v => setFillRateRange(v as [number, number])}
+                min={10}
+                max={100}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-24 text-right">{fillRateRange[0]}%-{fillRateRange[1]}%</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>請假率範圍（每人隨機）</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={leaveRateRange}
+                onValueChange={v => setLeaveRateRange(v as [number, number])}
+                min={0}
+                max={30}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-24 text-right">{leaveRateRange[0]}%-{leaveRateRange[1]}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Theme weights */}
+        <div className="space-y-2">
+          <Label>主題偏好（開啟後該主題的內容出現頻率提高）</Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Object.entries(THEME_GROUPS).map(([theme, keywords]) => {
+              const enabled = theme in themeWeights;
+              return (
+                <div key={theme} className="flex flex-col gap-1.5 p-3 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{theme}</span>
+                    <Switch checked={enabled} onCheckedChange={v => toggleThemeWeight(theme, v)} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">{keywords.join('、')}</p>
+                  {enabled && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Slider
+                        value={[themeWeights[theme]]}
+                        onValueChange={v => updateThemeWeight(theme, v[0])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-[10px] w-6 text-right">×{themeWeights[theme]}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button onClick={handleGenerate} disabled={isGenerating} size="lg" className="w-full">
+          {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+          {isGenerating ? '生成中...' : `生成模擬數據（${userCount}人 × ${durationMonths}個月）`}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   if (!mockData) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center space-y-4">
-          <div className="text-muted-foreground">點擊下方按鈕生成觀心書模擬數據（30位會員 × 1個月）</div>
-          <Button onClick={handleGenerate} disabled={isGenerating} size="lg">
-            {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
-            {isGenerating ? '生成中...' : '生成觀心書模擬數據'}
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    return settingsPanel;
   }
 
   const top5Keywords = mockData.keywordStats.slice(0, 5);
