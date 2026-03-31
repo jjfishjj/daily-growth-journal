@@ -415,6 +415,9 @@ export default function Admin() {
               <Database className="h-4 w-4" />
               模擬數據
             </TabsTrigger>
+            <TabsTrigger value="guanxin" className="gap-1">
+              觀心書
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
