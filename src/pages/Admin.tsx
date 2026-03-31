@@ -1021,7 +1021,18 @@ export default function Admin() {
 
           {/* Guanxin Tab */}
           <TabsContent value="guanxin">
-            <GuanxinAdmin />
+            <Tabs defaultValue="real" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="real">實際數據</TabsTrigger>
+                <TabsTrigger value="mock">模擬數據</TabsTrigger>
+              </TabsList>
+              <TabsContent value="real">
+                <GuanxinAdmin />
+              </TabsContent>
+              <TabsContent value="mock">
+                <GuanxinMockSimulation />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
