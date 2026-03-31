@@ -7,6 +7,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
+import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
