@@ -98,10 +98,39 @@ const LEAVE_REASONS = [
   '旅行中', '感冒發燒', '加班太晚', '個人因素'
 ];
 
+export interface GuanxinGenerateOptions {
+  userCount?: number;
+  month?: string; // yyyy-MM format
+  durationMonths?: number; // how many months to generate (1-12)
+  fillRateRange?: [number, number]; // e.g. [0.3, 0.9]
+  leaveRateRange?: [number, number];
+  themeWeights?: Record<string, number>; // keyword -> weight multiplier
+}
+
+// Theme groups for UI selection
+export const THEME_GROUPS: Record<string, string[]> = {
+  '感恩': ['感恩', '感謝', '欣賞'],
+  '冥想修行': ['冥想', '修行', '覺察', '覺醒', '呼吸', '當下'],
+  '經典': ['心經', '大悲咒', '恩啊轟'],
+  '身心': ['素食', '淨化', '能量', '光', '釋放'],
+  '功法': ['大笑功法', '舞之禪'],
+  '情緒成長': ['放下', '成長', '慈悲', '智慧', '精進', '安定'],
+  '人際': ['家人', '愛', '祝福', '快樂'],
+  '自我肯定': ['自我肯定', '練習', '堅持', '內在'],
+};
+
 export function generateGuanxinMockData(
-  userCount: number = 30,
-  month?: string // yyyy-MM format
+  optionsOrCount: number | GuanxinGenerateOptions = 30,
+  month?: string
 ): MockGuanxinData {
+  const opts: GuanxinGenerateOptions = typeof optionsOrCount === 'number'
+    ? { userCount: optionsOrCount, month }
+    : optionsOrCount;
+
+  const userCount = opts.userCount ?? 30;
+  const fillRange = opts.fillRateRange ?? [0.4, 0.9];
+  const leaveRange = opts.leaveRateRange ?? [0.05, 0.15];
+  const themeWeights = opts.themeWeights ?? {};
   const now = new Date();
   const targetMonth = month || format(now, 'yyyy-MM');
   const [year, mon] = targetMonth.split('-').map(Number);
