@@ -137,6 +137,10 @@ export default function Guanxin() {
       toast({ title: '請填寫內容', variant: 'destructive' });
       return;
     }
+    if (!editingId && !isDateSubmittable(selectedDate)) {
+      toast({ title: '此日期已無法填寫', description: '已超過可補填時間', variant: 'destructive' });
+      return;
+    }
     try {
       await submitGuanxin.mutateAsync({
         date: format(selectedDate, 'yyyy-MM-dd'),
