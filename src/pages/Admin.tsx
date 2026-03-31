@@ -7,6 +7,7 @@ import { useHabits } from '@/hooks/useHabits';
 import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
+import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
@@ -393,7 +394,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview">總覽</TabsTrigger>
             <TabsTrigger value="leaderboard" className="gap-1">
               <Trophy className="h-4 w-4" />
@@ -413,6 +414,9 @@ export default function Admin() {
             <TabsTrigger value="mock" className="gap-1">
               <Database className="h-4 w-4" />
               模擬數據
+            </TabsTrigger>
+            <TabsTrigger value="guanxin" className="gap-1">
+              觀心書
             </TabsTrigger>
           </TabsList>
 
@@ -1012,6 +1016,11 @@ export default function Admin() {
           {/* Mock Data Tab */}
           <TabsContent value="mock">
             <MockDataSimulation />
+          </TabsContent>
+
+          {/* Guanxin Tab */}
+          <TabsContent value="guanxin">
+            <GuanxinAdmin />
           </TabsContent>
         </Tabs>
       </div>

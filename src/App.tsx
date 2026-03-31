@@ -12,6 +12,7 @@ import Stats from "./pages/Stats";
 import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
+import Guanxin from "./pages/Guanxin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ function AppRoutes() {
       <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
       <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+      <Route path="/guanxin" element={<ProtectedRoute><Guanxin /></ProtectedRoute>} />
       <Route path="/simulation" element={<ProtectedRoute><AdminRoute><Simulation /></AdminRoute></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
