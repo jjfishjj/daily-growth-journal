@@ -6,15 +6,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
-import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye } from 'lucide-react';
-import { generateGuanxinMockData, MockGuanxinData } from '@/lib/guanxinMockDataGenerator';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
+import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings } from 'lucide-react';
+import { generateGuanxinMockData, MockGuanxinData, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
 const CHART_COLORS = [
@@ -27,19 +31,58 @@ const CHART_COLORS = [
 
 const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
 
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => {
+  const d = subMonths(new Date(), i);
+  return { value: format(d, 'yyyy-MM'), label: format(d, 'yyyy年MM月') };
+});
+
 export function GuanxinMockSimulation() {
   const [mockData, setMockData] = useState<MockGuanxinData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [viewContent, setViewContent] = useState<{ date: string; content: string; userName: string } | null>(null);
 
+  // Settings state
+  const [userCount, setUserCount] = useState(30);
+  const [durationMonths, setDurationMonths] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [fillRateRange, setFillRateRange] = useState<[number, number]>([40, 90]);
+  const [leaveRateRange, setLeaveRateRange] = useState<[number, number]>([5, 15]);
+  const [themeWeights, setThemeWeights] = useState<Record<string, number>>({});
+  const [showSettings, setShowSettings] = useState(true);
+
   const handleGenerate = () => {
     setIsGenerating(true);
     setTimeout(() => {
-      const data = generateGuanxinMockData(30);
+      const opts: GuanxinGenerateOptions = {
+        userCount,
+        month: selectedMonth,
+        durationMonths,
+        fillRateRange: [fillRateRange[0] / 100, fillRateRange[1] / 100],
+        leaveRateRange: [leaveRateRange[0] / 100, leaveRateRange[1] / 100],
+        themeWeights: Object.keys(themeWeights).length > 0 ? themeWeights : undefined,
+      };
+      const data = generateGuanxinMockData(opts);
       setMockData(data);
       setIsGenerating(false);
+      setShowSettings(false);
     }, 500);
+  };
+
+  const toggleThemeWeight = (theme: string, enabled: boolean) => {
+    setThemeWeights(prev => {
+      const next = { ...prev };
+      if (enabled) {
+        next[theme] = 3; // boost weight
+      } else {
+        delete next[theme];
+      }
+      return next;
+    });
+  };
+
+  const updateThemeWeight = (theme: string, weight: number) => {
+    setThemeWeights(prev => ({ ...prev, [theme]: weight }));
   };
 
   // Search results
