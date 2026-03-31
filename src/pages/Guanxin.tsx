@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,26 @@ import {
 import { ChevronLeft, ChevronRight, BookHeart, CalendarOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/** Check if a given date is allowed for submission based on current time */
+function getSubmittableDates(): Date[] {
+  const now = new Date();
+  const today = startOfDay(now);
+  const hour = now.getHours();
+
+  if (hour < 12) {
+    // Before 12PM: can submit for today or yesterday
+    return [subDays(today, 1), today];
+  } else {
+    // 12PM onwards: only today
+    return [today];
+  }
+}
+
+function isDateSubmittable(date: Date): boolean {
+  const allowed = getSubmittableDates();
+  return allowed.some(d => isSameDay(d, date));
+}
+
 const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
 const MAX_CHARS = 2000;
 
@@ -37,7 +57,7 @@ export default function Guanxin() {
   const [showForm, setShowForm] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveReason, setLeaveReason] = useState('');
-
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const monthKey = format(currentMonth, 'yyyy-MM');
   const { data: entries = [] } = useGuanxinEntries(monthKey);
   const { data: leaves = [] } = useGuanxinLeaves(monthKey);
@@ -59,9 +79,48 @@ export default function Guanxin() {
   const monthLeaveCount = leaves.length;
 
   const handleDayClick = (day: Date) => {
+    if (!isDateSubmittable(day)) {
+      // If there's an existing entry, allow viewing it read-only
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const existing = entries.find(e => e.date === dateStr);
+      if (existing) {
+        setSelectedDate(day);
+        setContent(existing.content);
+        setEditingId(existing.id);
+        setShowForm(true);
+      } else {
+        toast({ title: '此日期已無法填寫觀心書', description: '僅能填寫今天或隔天中午前補填前一天', variant: 'destructive' });
+      }
+      return;
+    }
     const dateStr = format(day, 'yyyy-MM-dd');
     setSelectedDate(day);
+    const existing = entries.find(e => e.date === dateStr);
+    if (existing) {
+      setContent(existing.content);
+      setEditingId(existing.id);
+    } else {
+      setContent('');
+      setEditingId(undefined);
+    }
+    setShowForm(true);
+  };
 
+  const openDatePickerForWrite = () => {
+    const dates = getSubmittableDates();
+    if (dates.length === 1) {
+      // Only today available, go directly
+      handleDayClick(dates[0]);
+    } else {
+      // Show date picker dialog
+      setShowDatePicker(true);
+    }
+  };
+
+  const selectDateAndOpenForm = (day: Date) => {
+    setShowDatePicker(false);
+    const dateStr = format(day, 'yyyy-MM-dd');
+    setSelectedDate(day);
     const existing = entries.find(e => e.date === dateStr);
     if (existing) {
       setContent(existing.content);
@@ -76,6 +135,10 @@ export default function Guanxin() {
   const handleSubmit = async () => {
     if (!selectedDate || !content.trim()) {
       toast({ title: '請填寫內容', variant: 'destructive' });
+      return;
+    }
+    if (!editingId && !isDateSubmittable(selectedDate)) {
+      toast({ title: '此日期已無法填寫', description: '已超過可補填時間', variant: 'destructive' });
       return;
     }
     try {
@@ -244,22 +307,10 @@ export default function Guanxin() {
         <div className="flex gap-3">
           <Button
             className="flex-1"
-            onClick={() => {
-              setSelectedDate(new Date());
-              const todayStr = format(new Date(), 'yyyy-MM-dd');
-              const existing = entries.find(e => e.date === todayStr);
-              if (existing) {
-                setContent(existing.content);
-                setEditingId(existing.id);
-              } else {
-                setContent('');
-                setEditingId(undefined);
-              }
-              setShowForm(true);
-            }}
+            onClick={openDatePickerForWrite}
           >
             <BookHeart className="h-4 w-4 mr-2" />
-            填寫今日觀心書
+            填寫觀心書
           </Button>
           <Button
             variant="outline"
@@ -374,6 +425,39 @@ export default function Guanxin() {
               {submitLeave.isPending ? '送出中...' : '確認請假'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Date Picker Dialog - choose today or yesterday */}
+      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>選擇填寫日期</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            中午 12:00 前可補填前一天的觀心書，請選擇要填寫的日期：
+          </p>
+          <div className="flex flex-col gap-3 mt-2">
+            {getSubmittableDates().map(date => {
+              const dateStr = format(date, 'yyyy-MM-dd');
+              const hasEntry = entryDates.has(dateStr);
+              const isYesterday = isSameDay(date, subDays(startOfDay(new Date()), 1));
+              return (
+                <Button
+                  key={dateStr}
+                  variant={hasEntry ? 'outline' : 'default'}
+                  className="w-full justify-between"
+                  onClick={() => selectDateAndOpenForm(date)}
+                >
+                  <span>
+                    {format(date, 'yyyy/MM/dd (EEEE)', { locale: zhTW })}
+                    {isYesterday && ' （補填）'}
+                  </span>
+                  {hasEntry && <span className="text-xs text-muted-foreground">已填寫 - 點擊修改</span>}
+                </Button>
+              );
+            })}
+          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>
