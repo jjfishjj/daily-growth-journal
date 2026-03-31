@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,26 @@ import {
 } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, BookHeart, CalendarOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/** Check if a given date is allowed for submission based on current time */
+function getSubmittableDates(): Date[] {
+  const now = new Date();
+  const today = startOfDay(now);
+  const hour = now.getHours();
+
+  if (hour < 12) {
+    // Before 12PM: can submit for today or yesterday
+    return [subDays(today, 1), today];
+  } else {
+    // 12PM onwards: only today
+    return [today];
+  }
+}
+
+function isDateSubmittable(date: Date): boolean {
+  const allowed = getSubmittableDates();
+  return allowed.some(d => isSameDay(d, date));
+}
 
 const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
 const MAX_CHARS = 2000;
