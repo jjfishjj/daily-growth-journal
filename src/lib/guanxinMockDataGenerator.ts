@@ -226,7 +226,7 @@ export function generateGuanxinMockData(
   }
 
   // Compute per-user stats
-  const pastDays = daysInMonth.filter(d => d <= now).length;
+  const pastDays = allDays.filter(d => d <= now).length;
   const userEntryMap = new Map<string, Set<string>>();
   const userLeaveMap = new Map<string, Set<string>>();
 
