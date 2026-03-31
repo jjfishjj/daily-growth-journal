@@ -12,6 +12,7 @@ import Stats from "./pages/Stats";
 import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
+import Guanxin from "./pages/Guanxin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
