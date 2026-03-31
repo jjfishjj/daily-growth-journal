@@ -303,22 +303,10 @@ export default function Guanxin() {
         <div className="flex gap-3">
           <Button
             className="flex-1"
-            onClick={() => {
-              setSelectedDate(new Date());
-              const todayStr = format(new Date(), 'yyyy-MM-dd');
-              const existing = entries.find(e => e.date === todayStr);
-              if (existing) {
-                setContent(existing.content);
-                setEditingId(existing.id);
-              } else {
-                setContent('');
-                setEditingId(undefined);
-              }
-              setShowForm(true);
-            }}
+            onClick={openDatePickerForWrite}
           >
             <BookHeart className="h-4 w-4 mr-2" />
-            填寫今日觀心書
+            填寫觀心書
           </Button>
           <Button
             variant="outline"
