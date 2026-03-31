@@ -1014,6 +1014,11 @@ export default function Admin() {
           <TabsContent value="mock">
             <MockDataSimulation />
           </TabsContent>
+
+          {/* Guanxin Tab */}
+          <TabsContent value="guanxin">
+            <GuanxinAdmin />
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
