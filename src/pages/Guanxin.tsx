@@ -423,6 +423,39 @@ export default function Guanxin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Date Picker Dialog - choose today or yesterday */}
+      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>選擇填寫日期</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            中午 12:00 前可補填前一天的觀心書，請選擇要填寫的日期：
+          </p>
+          <div className="flex flex-col gap-3 mt-2">
+            {getSubmittableDates().map(date => {
+              const dateStr = format(date, 'yyyy-MM-dd');
+              const hasEntry = entryDates.has(dateStr);
+              const isYesterday = isSameDay(date, subDays(startOfDay(new Date()), 1));
+              return (
+                <Button
+                  key={dateStr}
+                  variant={hasEntry ? 'outline' : 'default'}
+                  className="w-full justify-between"
+                  onClick={() => selectDateAndOpenForm(date)}
+                >
+                  <span>
+                    {format(date, 'yyyy/MM/dd (EEEE)', { locale: zhTW })}
+                    {isYesterday && ' （補填）'}
+                  </span>
+                  {hasEntry && <span className="text-xs text-muted-foreground">已填寫 - 點擊修改</span>}
+                </Button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
