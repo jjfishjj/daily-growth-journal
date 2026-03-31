@@ -8,6 +8,7 @@ import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
 import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
+import { GuanxinMockSimulation } from '@/components/admin/GuanxinMockSimulation';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
@@ -1020,7 +1021,18 @@ export default function Admin() {
 
           {/* Guanxin Tab */}
           <TabsContent value="guanxin">
-            <GuanxinAdmin />
+            <Tabs defaultValue="real" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="real">實際數據</TabsTrigger>
+                <TabsTrigger value="mock">模擬數據</TabsTrigger>
+              </TabsList>
+              <TabsContent value="real">
+                <GuanxinAdmin />
+              </TabsContent>
+              <TabsContent value="mock">
+                <GuanxinMockSimulation />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
