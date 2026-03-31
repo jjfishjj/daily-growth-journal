@@ -98,22 +98,85 @@ const LEAVE_REASONS = [
   '旅行中', '感冒發燒', '加班太晚', '個人因素'
 ];
 
+export interface GuanxinGenerateOptions {
+  userCount?: number;
+  month?: string; // yyyy-MM format
+  durationMonths?: number; // how many months to generate (1-12)
+  fillRateRange?: [number, number]; // e.g. [0.3, 0.9]
+  leaveRateRange?: [number, number];
+  themeWeights?: Record<string, number>; // keyword -> weight multiplier
+}
+
+// Theme groups for UI selection
+export const THEME_GROUPS: Record<string, string[]> = {
+  '感恩': ['感恩', '感謝', '欣賞'],
+  '冥想修行': ['冥想', '修行', '覺察', '覺醒', '呼吸', '當下'],
+  '經典': ['心經', '大悲咒', '恩啊轟'],
+  '身心': ['素食', '淨化', '能量', '光', '釋放'],
+  '功法': ['大笑功法', '舞之禪'],
+  '情緒成長': ['放下', '成長', '慈悲', '智慧', '精進', '安定'],
+  '人際': ['家人', '愛', '祝福', '快樂'],
+  '自我肯定': ['自我肯定', '練習', '堅持', '內在'],
+};
+
 export function generateGuanxinMockData(
-  userCount: number = 30,
-  month?: string // yyyy-MM format
+  optionsOrCount: number | GuanxinGenerateOptions = 30,
+  month?: string
 ): MockGuanxinData {
+  const opts: GuanxinGenerateOptions = typeof optionsOrCount === 'number'
+    ? { userCount: optionsOrCount, month }
+    : optionsOrCount;
+
+  const userCount = opts.userCount ?? 30;
+  const fillRange = opts.fillRateRange ?? [0.4, 0.9];
+  const leaveRange = opts.leaveRateRange ?? [0.05, 0.15];
+  const themeWeights = opts.themeWeights ?? {};
   const now = new Date();
-  const targetMonth = month || format(now, 'yyyy-MM');
-  const [year, mon] = targetMonth.split('-').map(Number);
-  const monthStart = startOfMonth(new Date(year, mon - 1));
-  const monthEnd = endOfMonth(new Date(year, mon - 1));
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const totalDays = daysInMonth.length;
+  const targetMonth = opts.month || format(now, 'yyyy-MM');
+  const durationMonths = opts.durationMonths ?? 1;
+
+  // Build all days across all months
+  const allDays: Date[] = [];
+  const [baseYear, baseMon] = targetMonth.split('-').map(Number);
+  const monthLabels: string[] = [];
+  for (let m = 0; m < durationMonths; m++) {
+    const d = new Date(baseYear, baseMon - 1 - (durationMonths - 1 - m));
+    const ms = startOfMonth(d);
+    const me = endOfMonth(d);
+    const label = format(ms, 'yyyy-MM');
+    monthLabels.push(label);
+    allDays.push(...eachDayOfInterval({ start: ms, end: me }));
+  }
 
   const users: MockGuanxinUser[] = [];
   const entries: MockGuanxinEntry[] = [];
   const leaves: MockGuanxinLeave[] = [];
   const keywordCountMap = new Map<string, { count: number; users: Set<string> }>();
+
+  // Build weighted templates based on theme weights
+  const hasWeights = Object.keys(themeWeights).length > 0;
+  const weightedTemplates = hasWeights
+    ? GUANXIN_TEMPLATES.map(t => {
+        let weight = 1;
+        for (const [theme, keywords] of Object.entries(THEME_GROUPS)) {
+          const tw = themeWeights[theme] ?? 1;
+          if (keywords.some(kw => t.includes(kw))) {
+            weight *= tw;
+          }
+        }
+        return { template: t, weight };
+      })
+    : GUANXIN_TEMPLATES.map(t => ({ template: t, weight: 1 }));
+
+  const pickWeightedTemplate = (): string => {
+    const totalWeight = weightedTemplates.reduce((s, t) => s + t.weight, 0);
+    let r = Math.random() * totalWeight;
+    for (const t of weightedTemplates) {
+      r -= t.weight;
+      if (r <= 0) return t.template;
+    }
+    return weightedTemplates[weightedTemplates.length - 1].template;
+  };
 
   const shuffledNames = [...NAMES].sort(() => Math.random() - 0.5);
 
@@ -122,21 +185,17 @@ export function generateGuanxinMockData(
     const name = shuffledNames[u % shuffledNames.length] + (u >= NAMES.length ? `${u - NAMES.length + 2}` : '');
     users.push({ userId, name });
 
-    // Each user has a fill probability (some are diligent, some not)
-    const fillProb = 0.4 + Math.random() * 0.5; // 40%-90%
-    const leaveProb = 0.05 + Math.random() * 0.1; // 5%-15%
+    const fillProb = fillRange[0] + Math.random() * (fillRange[1] - fillRange[0]);
+    const leaveProb = leaveRange[0] + Math.random() * (leaveRange[1] - leaveRange[0]);
 
-    for (const day of daysInMonth) {
-      // Skip future days
+    for (const day of allDays) {
       if (day > now) continue;
 
       const dateStr = format(day, 'yyyy-MM-dd');
       const rand = Math.random();
 
       if (rand < fillProb) {
-        // Generate entry
-        const baseContent = GUANXIN_TEMPLATES[getRandomInt(0, GUANXIN_TEMPLATES.length - 1)];
-        // Add some variation
+        const baseContent = pickWeightedTemplate();
         const extraLines = Math.random() > 0.5
           ? `\n\n今天特別想感謝${['媽媽', '爸爸', '老師', '朋友', '同事'][getRandomInt(0, 4)]}的${['關心', '支持', '鼓勵', '陪伴', '教導'][getRandomInt(0, 4)]}。`
           : '';
@@ -167,7 +226,7 @@ export function generateGuanxinMockData(
   }
 
   // Compute per-user stats
-  const pastDays = daysInMonth.filter(d => d <= now).length;
+  const pastDays = allDays.filter(d => d <= now).length;
   const userEntryMap = new Map<string, Set<string>>();
   const userLeaveMap = new Map<string, Set<string>>();
 

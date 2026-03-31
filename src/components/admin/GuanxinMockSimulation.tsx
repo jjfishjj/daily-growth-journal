@@ -6,15 +6,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
-import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye } from 'lucide-react';
-import { generateGuanxinMockData, MockGuanxinData } from '@/lib/guanxinMockDataGenerator';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
+import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings } from 'lucide-react';
+import { generateGuanxinMockData, MockGuanxinData, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
 const CHART_COLORS = [
@@ -27,19 +31,58 @@ const CHART_COLORS = [
 
 const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
 
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => {
+  const d = subMonths(new Date(), i);
+  return { value: format(d, 'yyyy-MM'), label: format(d, 'yyyy年MM月') };
+});
+
 export function GuanxinMockSimulation() {
   const [mockData, setMockData] = useState<MockGuanxinData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [viewContent, setViewContent] = useState<{ date: string; content: string; userName: string } | null>(null);
 
+  // Settings state
+  const [userCount, setUserCount] = useState(30);
+  const [durationMonths, setDurationMonths] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [fillRateRange, setFillRateRange] = useState<[number, number]>([40, 90]);
+  const [leaveRateRange, setLeaveRateRange] = useState<[number, number]>([5, 15]);
+  const [themeWeights, setThemeWeights] = useState<Record<string, number>>({});
+  const [showSettings, setShowSettings] = useState(true);
+
   const handleGenerate = () => {
     setIsGenerating(true);
     setTimeout(() => {
-      const data = generateGuanxinMockData(30);
+      const opts: GuanxinGenerateOptions = {
+        userCount,
+        month: selectedMonth,
+        durationMonths,
+        fillRateRange: [fillRateRange[0] / 100, fillRateRange[1] / 100],
+        leaveRateRange: [leaveRateRange[0] / 100, leaveRateRange[1] / 100],
+        themeWeights: Object.keys(themeWeights).length > 0 ? themeWeights : undefined,
+      };
+      const data = generateGuanxinMockData(opts);
       setMockData(data);
       setIsGenerating(false);
+      setShowSettings(false);
     }, 500);
+  };
+
+  const toggleThemeWeight = (theme: string, enabled: boolean) => {
+    setThemeWeights(prev => {
+      const next = { ...prev };
+      if (enabled) {
+        next[theme] = 3; // boost weight
+      } else {
+        delete next[theme];
+      }
+      return next;
+    });
+  };
+
+  const updateThemeWeight = (theme: string, weight: number) => {
+    setThemeWeights(prev => ({ ...prev, [theme]: weight }));
   };
 
   // Search results
@@ -102,18 +145,129 @@ export function GuanxinMockSimulation() {
     };
   }, [mockData]);
 
+  const settingsPanel = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Settings className="h-4 w-4" /> 模擬參數設定
+        </CardTitle>
+        <CardDescription>調整以下參數來自訂模擬數據的生成方式</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Row 1: User count & month */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>模擬人數</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={[userCount]}
+                onValueChange={v => setUserCount(v[0])}
+                min={5}
+                max={100}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-12 text-right">{userCount} 人</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>起始月份</Label>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MONTH_OPTIONS.map(m => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>時間長度</Label>
+            <Select value={String(durationMonths)} onValueChange={v => setDurationMonths(Number(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 6, 12].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n} 個月</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Row 2: Fill rate & leave rate */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>填寫率範圍（每人隨機）</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={fillRateRange}
+                onValueChange={v => setFillRateRange(v as [number, number])}
+                min={10}
+                max={100}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-24 text-right">{fillRateRange[0]}%-{fillRateRange[1]}%</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>請假率範圍（每人隨機）</Label>
+            <div className="flex items-center gap-3">
+              <Slider
+                value={leaveRateRange}
+                onValueChange={v => setLeaveRateRange(v as [number, number])}
+                min={0}
+                max={30}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-sm font-medium w-24 text-right">{leaveRateRange[0]}%-{leaveRateRange[1]}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Theme weights */}
+        <div className="space-y-2">
+          <Label>主題偏好（開啟後該主題的內容出現頻率提高）</Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Object.entries(THEME_GROUPS).map(([theme, keywords]) => {
+              const enabled = theme in themeWeights;
+              return (
+                <div key={theme} className="flex flex-col gap-1.5 p-3 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{theme}</span>
+                    <Switch checked={enabled} onCheckedChange={v => toggleThemeWeight(theme, v)} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground line-clamp-1">{keywords.join('、')}</p>
+                  {enabled && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Slider
+                        value={[themeWeights[theme]]}
+                        onValueChange={v => updateThemeWeight(theme, v[0])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <span className="text-[10px] w-6 text-right">×{themeWeights[theme]}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button onClick={handleGenerate} disabled={isGenerating} size="lg" className="w-full">
+          {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+          {isGenerating ? '生成中...' : `生成模擬數據（${userCount}人 × ${durationMonths}個月）`}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
   if (!mockData) {
-    return (
-      <Card>
-        <CardContent className="pt-6 text-center space-y-4">
-          <div className="text-muted-foreground">點擊下方按鈕生成觀心書模擬數據（30位會員 × 1個月）</div>
-          <Button onClick={handleGenerate} disabled={isGenerating} size="lg">
-            {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
-            {isGenerating ? '生成中...' : '生成觀心書模擬數據'}
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    return settingsPanel;
   }
 
   const top5Keywords = mockData.keywordStats.slice(0, 5);
@@ -126,14 +280,22 @@ export function GuanxinMockSimulation() {
         <div>
           <h3 className="text-lg font-semibold">觀心書模擬數據</h3>
           <p className="text-sm text-muted-foreground">
-            {mockData.month} · {mockData.users.length} 位會員 · {mockData.entries.length} 筆填寫
+            {mockData.month} · {mockData.users.length} 位會員 · {mockData.entries.length} 筆填寫 · {durationMonths} 個月
           </p>
         </div>
-        <Button variant="outline" onClick={handleGenerate} disabled={isGenerating}>
-          <RefreshCw className={cn("h-4 w-4 mr-2", isGenerating && "animate-spin")} />
-          重新生成
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)}>
+            <Settings className="h-4 w-4 mr-1" />
+            {showSettings ? '隱藏設定' : '調整參數'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleGenerate} disabled={isGenerating}>
+            <RefreshCw className={cn("h-4 w-4 mr-1", isGenerating && "animate-spin")} />
+            重新生成
+          </Button>
+        </div>
       </div>
+
+      {showSettings && settingsPanel}
 
       {/* Overview cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
