@@ -8,6 +8,7 @@ import { RoleManagement } from '@/components/admin/RoleManagement';
 import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
 import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
+import { GuanxinMockSimulation } from '@/components/admin/GuanxinMockSimulation';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
