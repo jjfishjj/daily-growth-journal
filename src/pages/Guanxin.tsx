@@ -79,9 +79,48 @@ export default function Guanxin() {
   const monthLeaveCount = leaves.length;
 
   const handleDayClick = (day: Date) => {
+    if (!isDateSubmittable(day)) {
+      // If there's an existing entry, allow viewing it read-only
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const existing = entries.find(e => e.date === dateStr);
+      if (existing) {
+        setSelectedDate(day);
+        setContent(existing.content);
+        setEditingId(existing.id);
+        setShowForm(true);
+      } else {
+        toast({ title: '此日期已無法填寫觀心書', description: '僅能填寫今天或隔天中午前補填前一天', variant: 'destructive' });
+      }
+      return;
+    }
     const dateStr = format(day, 'yyyy-MM-dd');
     setSelectedDate(day);
+    const existing = entries.find(e => e.date === dateStr);
+    if (existing) {
+      setContent(existing.content);
+      setEditingId(existing.id);
+    } else {
+      setContent('');
+      setEditingId(undefined);
+    }
+    setShowForm(true);
+  };
 
+  const openDatePickerForWrite = () => {
+    const dates = getSubmittableDates();
+    if (dates.length === 1) {
+      // Only today available, go directly
+      handleDayClick(dates[0]);
+    } else {
+      // Show date picker dialog
+      setShowDatePicker(true);
+    }
+  };
+
+  const selectDateAndOpenForm = (day: Date) => {
+    setShowDatePicker(false);
+    const dateStr = format(day, 'yyyy-MM-dd');
+    setSelectedDate(day);
     const existing = entries.find(e => e.date === dateStr);
     if (existing) {
       setContent(existing.content);
