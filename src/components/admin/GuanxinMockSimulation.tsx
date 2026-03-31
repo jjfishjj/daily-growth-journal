@@ -280,14 +280,22 @@ export function GuanxinMockSimulation() {
         <div>
           <h3 className="text-lg font-semibold">觀心書模擬數據</h3>
           <p className="text-sm text-muted-foreground">
-            {mockData.month} · {mockData.users.length} 位會員 · {mockData.entries.length} 筆填寫
+            {mockData.month} · {mockData.users.length} 位會員 · {mockData.entries.length} 筆填寫 · {durationMonths} 個月
           </p>
         </div>
-        <Button variant="outline" onClick={handleGenerate} disabled={isGenerating}>
-          <RefreshCw className={cn("h-4 w-4 mr-2", isGenerating && "animate-spin")} />
-          重新生成
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(!showSettings)}>
+            <Settings className="h-4 w-4 mr-1" />
+            {showSettings ? '隱藏設定' : '調整參數'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleGenerate} disabled={isGenerating}>
+            <RefreshCw className={cn("h-4 w-4 mr-1", isGenerating && "animate-spin")} />
+            重新生成
+          </Button>
+        </div>
       </div>
+
+      {showSettings && settingsPanel}
 
       {/* Overview cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
