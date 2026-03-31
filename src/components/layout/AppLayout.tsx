@@ -26,6 +26,7 @@ const navItems = [
   { path: '/history', label: '歷史紀錄', icon: History },
   { path: '/stats', label: '我的數據', icon: BarChart3 },
   { path: '/community', label: '平台動態', icon: Users },
+  { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
 ];
 
 const adminNavItems = [
