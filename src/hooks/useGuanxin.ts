@@ -133,6 +133,29 @@ export function useCancelLeave() {
   });
 }
 
+// Admin: approve/reject leave
+export function useReviewLeave() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ leaveId, status, adminNote }: { leaveId: string; status: 'approved' | 'rejected'; adminNote?: string }) => {
+      const { error } = await supabase
+        .from('guanxin_leaves')
+        .update({
+          status,
+          admin_note: adminNote || null,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq('id', leaveId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guanxin-leaves'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-guanxin-leaves'] });
+    },
+  });
+}
+
 // Admin hooks
 export function useAllGuanxinEntries(month?: string) {
   const { isAdmin } = useAuth();

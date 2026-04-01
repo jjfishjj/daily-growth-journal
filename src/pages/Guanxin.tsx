@@ -158,17 +158,20 @@ export default function Guanxin() {
   };
 
   const handleLeaveSubmit = async () => {
-    if (!selectedDate) return;
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    if (leaveDates.has(dateStr)) {
+    if (!leaveDate) {
+      toast({ title: '請選擇請假日期', variant: 'destructive' });
+      return;
+    }
+    if (leaveDates.has(leaveDate)) {
       toast({ title: '該日已請假', variant: 'destructive' });
       return;
     }
     try {
-      await submitLeave.mutateAsync({ date: dateStr, reason: leaveReason.trim() || undefined });
-      toast({ title: '請假成功' });
+      await submitLeave.mutateAsync({ date: leaveDate, reason: leaveReason.trim() || undefined });
+      toast({ title: '請假申請已送出，等待管理員審核' });
       setShowLeaveDialog(false);
       setLeaveReason('');
+      setLeaveDate('');
     } catch {
       toast({ title: '請假失敗', variant: 'destructive' });
     }
