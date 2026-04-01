@@ -72,6 +72,10 @@ export interface MockGuanxinUserStat {
   leaveDays: number;
   totalDaysInMonth: number;
   fillRate: number;
+  missedDates: string[];
+  filledDates: string[];
+  leaveDates: string[];
+  isPerfectAttendance: boolean;
 }
 
 export interface KeywordStat {
