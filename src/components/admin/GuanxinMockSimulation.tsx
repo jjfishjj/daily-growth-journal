@@ -146,6 +146,43 @@ export function GuanxinMockSimulation() {
     };
   }, [mockData]);
 
+  // Perfect attendance users
+  const perfectAttendanceUsers = useMemo(() => {
+    if (!mockData) return [];
+    return mockData.userStats.filter(u => u.isPerfectAttendance);
+  }, [mockData]);
+
+  // Users with absences, sorted by most missed days
+  const absentUsers = useMemo(() => {
+    if (!mockData) return [];
+    return mockData.userStats
+      .filter(u => u.missedDays > 0)
+      .sort((a, b) => b.missedDays - a.missedDays);
+  }, [mockData]);
+
+  // Keyword frequency with percentage
+  const keywordFrequency = useMemo(() => {
+    if (!mockData) return [];
+    const total = mockData.entries.length;
+    return mockData.keywordStats.map(ks => ({
+      ...ks,
+      frequency: total > 0 ? ((ks.count / total) * 100).toFixed(1) : '0',
+    }));
+  }, [mockData]);
+
+  // Daily fill trend (entries per day across all users)
+  const dailyFillTrend = useMemo(() => {
+    if (!mockData) return [];
+    const dateCount = new Map<string, number>();
+    mockData.entries.forEach(e => dateCount.set(e.date, (dateCount.get(e.date) || 0) + 1));
+    return Array.from(dateCount.entries())
+      .map(([date, count]) => ({ date: date.slice(5), count, rate: ((count / mockData.users.length) * 100) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [mockData]);
+
+  // Selected user for absence detail view
+  const [selectedAbsentUser, setSelectedAbsentUser] = useState<MockGuanxinUserStat | null>(null);
+
   const settingsPanel = (
     <Card>
       <CardHeader>
