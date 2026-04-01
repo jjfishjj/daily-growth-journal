@@ -57,6 +57,7 @@ export default function Guanxin() {
   const [showForm, setShowForm] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveReason, setLeaveReason] = useState('');
+  const [leaveDate, setLeaveDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const monthKey = format(currentMonth, 'yyyy-MM');
   const { data: entries = [] } = useGuanxinEntries(monthKey);
