@@ -488,6 +488,125 @@ export function GuanxinMockSimulation() {
           </Card>
         </TabsContent>
 
+        {/* Attendance tab */}
+        <TabsContent value="attendance" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Perfect attendance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Award className="h-4 w-4 text-primary" /> 全勤榜
+                </CardTitle>
+                <CardDescription>
+                  本期間填寫率 100%（含請假）的會員，共 {perfectAttendanceUsers.length} 人
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {perfectAttendanceUsers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">本期間無全勤會員</p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {perfectAttendanceUsers.map((u, i) => (
+                      <div key={u.userId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                        <span className="text-lg">🏆</span>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{u.name}</span>
+                          <div className="text-xs text-muted-foreground">
+                            填寫 {u.filledDays} 天 · 請假 {u.leaveDays} 天
+                          </div>
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-primary/20">全勤</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Absence summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" /> 缺席排行
+                </CardTitle>
+                <CardDescription>
+                  缺席天數最多的會員（點擊查看缺席日期）
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {absentUsers.slice(0, 15).map(u => (
+                    <div
+                      key={u.userId}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/60 transition-colors"
+                      onClick={() => setSelectedAbsentUser(u)}
+                    >
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{u.name}</span>
+                        <div className="text-xs text-muted-foreground">
+                          填寫率 {u.fillRate.toFixed(0)}%
+                        </div>
+                      </div>
+                      <Badge variant="destructive">{u.missedDays} 天缺席</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Full absence detail table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">缺席詳情總表</CardTitle>
+              <CardDescription>所有有缺席記錄的會員及其缺席日期</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>會員</TableHead>
+                      <TableHead className="text-center">填寫天數</TableHead>
+                      <TableHead className="text-center">請假天數</TableHead>
+                      <TableHead className="text-center">缺席天數</TableHead>
+                      <TableHead>缺席日期</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {absentUsers.map(u => (
+                      <TableRow key={u.userId}>
+                        <TableCell className="font-medium">{u.name}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary">{u.filledDays}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {u.leaveDays > 0 ? <Badge variant="outline">{u.leaveDays}</Badge> : '0'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="destructive">{u.missedDays}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-[300px]">
+                            {u.missedDates.slice(0, 10).map(d => (
+                              <span key={d} className="text-[10px] bg-destructive/10 text-destructive rounded px-1.5 py-0.5">
+                                {d.slice(5)}
+                              </span>
+                            ))}
+                            {u.missedDates.length > 10 && (
+                              <span className="text-[10px] text-muted-foreground">+{u.missedDates.length - 10}天</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Keywords tab */}
         <TabsContent value="keywords" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
