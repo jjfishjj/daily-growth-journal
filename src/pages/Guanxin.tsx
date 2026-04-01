@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay, addDays } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +57,8 @@ export default function Guanxin() {
   const [showForm, setShowForm] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveReason, setLeaveReason] = useState('');
-  const [leaveDate, setLeaveDate] = useState('');
+  const [leaveStartDate, setLeaveStartDate] = useState('');
+  const [leaveEndDate, setLeaveEndDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const monthKey = format(currentMonth, 'yyyy-MM');
   const { data: entries = [] } = useGuanxinEntries(monthKey);
@@ -158,20 +159,40 @@ export default function Guanxin() {
   };
 
   const handleLeaveSubmit = async () => {
-    if (!leaveDate) {
-      toast({ title: '請選擇請假日期', variant: 'destructive' });
+    if (!leaveStartDate) {
+      toast({ title: '請選擇請假起始日期', variant: 'destructive' });
       return;
     }
-    if (leaveDates.has(leaveDate)) {
-      toast({ title: '該日已請假', variant: 'destructive' });
+    const endDate = leaveEndDate || leaveStartDate;
+    if (endDate < leaveStartDate) {
+      toast({ title: '結束日期不能早於起始日期', variant: 'destructive' });
+      return;
+    }
+    // Generate all dates in range
+    const start = new Date(leaveStartDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+    const days: string[] = [];
+    let current = start;
+    while (current <= end) {
+      const dateStr = format(current, 'yyyy-MM-dd');
+      if (!leaveDates.has(dateStr)) {
+        days.push(dateStr);
+      }
+      current = addDays(current, 1);
+    }
+    if (days.length === 0) {
+      toast({ title: '所選日期範圍皆已請假', variant: 'destructive' });
       return;
     }
     try {
-      await submitLeave.mutateAsync({ date: leaveDate, reason: leaveReason.trim() || undefined });
-      toast({ title: '請假申請已送出，等待管理員審核' });
+      for (const date of days) {
+        await submitLeave.mutateAsync({ date, reason: leaveReason.trim() || undefined });
+      }
+      toast({ title: `已送出 ${days.length} 天請假申請，等待管理員審核` });
       setShowLeaveDialog(false);
       setLeaveReason('');
-      setLeaveDate('');
+      setLeaveStartDate('');
+      setLeaveEndDate('');
     } catch {
       toast({ title: '請假失敗', variant: 'destructive' });
     }
@@ -319,7 +340,8 @@ export default function Guanxin() {
           <Button
             variant="outline"
             onClick={() => {
-              setLeaveDate('');
+              setLeaveStartDate('');
+              setLeaveEndDate('');
               setShowLeaveDialog(true);
             }}
           >
@@ -423,15 +445,34 @@ export default function Guanxin() {
             <DialogTitle>請假申請</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">請假日期</label>
-              <input
-                type="date"
-                value={leaveDate}
-                onChange={e => setLeaveDate(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">起始日期</label>
+                <input
+                  type="date"
+                  value={leaveStartDate}
+                  onChange={e => setLeaveStartDate(e.target.value)}
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">結束日期（選填）</label>
+                <input
+                  type="date"
+                  value={leaveEndDate}
+                  onChange={e => setLeaveEndDate(e.target.value)}
+                  min={leaveStartDate}
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
             </div>
+            {leaveStartDate && (
+              <p className="text-xs text-muted-foreground">
+                {leaveEndDate && leaveEndDate !== leaveStartDate
+                  ? `共 ${Math.floor((new Date(leaveEndDate).getTime() - new Date(leaveStartDate).getTime()) / 86400000) + 1} 天`
+                  : '請假 1 天'}
+              </p>
+            )}
             <div>
               <label className="text-sm font-medium mb-1 block">請假原因（選填）</label>
               <Textarea
@@ -447,7 +488,7 @@ export default function Guanxin() {
             <Button variant="outline" onClick={() => setShowLeaveDialog(false)}>取消</Button>
             <Button
               onClick={handleLeaveSubmit}
-              disabled={submitLeave.isPending || !leaveDate}
+              disabled={submitLeave.isPending || !leaveStartDate}
             >
               {submitLeave.isPending ? '送出中...' : '送出請假申請'}
             </Button>
