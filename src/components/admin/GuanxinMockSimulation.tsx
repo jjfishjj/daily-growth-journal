@@ -874,6 +874,53 @@ export function GuanxinMockSimulation() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Absence detail dialog */}
+      <Dialog open={!!selectedAbsentUser} onOpenChange={() => setSelectedAbsentUser(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              📋 {selectedAbsentUser?.name} 缺席詳情
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAbsentUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-lg font-bold">{selectedAbsentUser.filledDays}</div>
+                  <div className="text-xs text-muted-foreground">已填寫</div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-lg font-bold">{selectedAbsentUser.leaveDays}</div>
+                  <div className="text-xs text-muted-foreground">已請假</div>
+                </div>
+                <div className="bg-destructive/10 rounded-lg p-3">
+                  <div className="text-lg font-bold text-destructive">{selectedAbsentUser.missedDays}</div>
+                  <div className="text-xs text-muted-foreground">缺席</div>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">缺席日期</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedAbsentUser.missedDates.map(d => (
+                    <Badge key={d} variant="destructive" className="text-xs">{d}</Badge>
+                  ))}
+                </div>
+              </div>
+              {selectedAbsentUser.leaveDates.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">請假日期</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedAbsentUser.leaveDates.map(d => (
+                      <Badge key={d} variant="outline" className="text-xs">{d}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
