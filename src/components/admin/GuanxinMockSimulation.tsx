@@ -664,11 +664,12 @@ export function GuanxinMockSimulation() {
                       <TableHead>排名</TableHead>
                       <TableHead>關鍵字</TableHead>
                       <TableHead className="text-center">出現次數</TableHead>
+                      <TableHead className="text-center">出現頻率</TableHead>
                       <TableHead className="text-center">涉及會員數</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockData.keywordStats.map((ks, i) => (
+                    {keywordFrequency.map((ks, i) => (
                       <TableRow key={ks.keyword}>
                         <TableCell>
                           <span className={cn("font-bold", i < 5 && "text-primary")}>{i + 1}</span>
@@ -677,11 +678,45 @@ export function GuanxinMockSimulation() {
                           <Badge variant={i < 5 ? "default" : "secondary"}>{ks.keyword}</Badge>
                         </TableCell>
                         <TableCell className="text-center">{ks.count}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-sm font-medium">{ks.frequency}%</span>
+                        </TableCell>
                         <TableCell className="text-center">{ks.users.length}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Trend tab */}
+        <TabsContent value="trend" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" /> 每日填寫趨勢
+              </CardTitle>
+              <CardDescription>每天有多少人填寫觀心書（全部 {mockData.users.length} 位會員）</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dailyFillTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" fontSize={10} />
+                    <YAxis yAxisId="count" />
+                    <YAxis yAxisId="rate" orientation="right" unit="%" />
+                    <Tooltip formatter={(value: number, name: string) => [
+                      name === '填寫人數' ? `${value} 人` : `${value.toFixed(1)}%`,
+                      name
+                    ]} />
+                    <Legend />
+                    <Line yAxisId="count" type="monotone" dataKey="count" name="填寫人數" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line yAxisId="rate" type="monotone" dataKey="rate" name="填寫率" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
