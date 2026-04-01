@@ -368,9 +368,11 @@ export function GuanxinMockSimulation() {
       </div>
 
       <Tabs defaultValue="stats">
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="stats">會員統計</TabsTrigger>
+          <TabsTrigger value="attendance">全勤與缺席</TabsTrigger>
           <TabsTrigger value="keywords">關鍵字分析</TabsTrigger>
+          <TabsTrigger value="trend">每日趨勢</TabsTrigger>
           <TabsTrigger value="calendar">月曆總覽</TabsTrigger>
           <TabsTrigger value="search">搜尋</TabsTrigger>
         </TabsList>
