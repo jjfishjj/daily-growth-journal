@@ -420,23 +420,36 @@ export default function Guanxin() {
       <Dialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              請假申請 - {selectedDate && format(selectedDate, 'yyyy/MM/dd')}
-            </DialogTitle>
+            <DialogTitle>請假申請</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={leaveReason}
-            onChange={e => setLeaveReason(e.target.value)}
-            placeholder="請假原因（選填）"
-            className="min-h-[80px]"
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">請假日期</label>
+              <input
+                type="date"
+                value={leaveDate}
+                onChange={e => setLeaveDate(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">請假原因（選填）</label>
+              <Textarea
+                value={leaveReason}
+                onChange={e => setLeaveReason(e.target.value)}
+                placeholder="請輸入請假原因"
+                className="min-h-[80px]"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">送出後需等待管理員審核批准</p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLeaveDialog(false)}>取消</Button>
             <Button
               onClick={handleLeaveSubmit}
-              disabled={submitLeave.isPending}
+              disabled={submitLeave.isPending || !leaveDate}
             >
-              {submitLeave.isPending ? '送出中...' : '確認請假'}
+              {submitLeave.isPending ? '送出中...' : '送出請假申請'}
             </Button>
           </DialogFooter>
         </DialogContent>
