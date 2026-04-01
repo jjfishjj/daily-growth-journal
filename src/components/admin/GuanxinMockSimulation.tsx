@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
+  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,
+  LineChart, Line
 } from 'recharts';
-import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings } from 'lucide-react';
-import { generateGuanxinMockData, MockGuanxinData, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
+import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings, Award, AlertCircle, TrendingUp } from 'lucide-react';
+import { generateGuanxinMockData, MockGuanxinData, MockGuanxinUserStat, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
