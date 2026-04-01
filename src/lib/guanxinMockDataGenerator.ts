@@ -72,6 +72,10 @@ export interface MockGuanxinUserStat {
   leaveDays: number;
   totalDaysInMonth: number;
   fillRate: number;
+  missedDates: string[];
+  filledDates: string[];
+  leaveDates: string[];
+  isPerfectAttendance: boolean;
 }
 
 export interface KeywordStat {
@@ -242,10 +246,15 @@ export function generateGuanxinMockData(
     userLeaveMap.set(l.userId, set);
   });
 
+  const allPastDateStrs = allDays.filter(d => d <= now).map(d => format(d, 'yyyy-MM-dd'));
+
   const userStats: MockGuanxinUserStat[] = users.map(u => {
-    const filled = userEntryMap.get(u.userId)?.size || 0;
-    const leaved = userLeaveMap.get(u.userId)?.size || 0;
+    const filledSet = userEntryMap.get(u.userId) || new Set<string>();
+    const leaveSet = userLeaveMap.get(u.userId) || new Set<string>();
+    const filled = filledSet.size;
+    const leaved = leaveSet.size;
     const missed = pastDays - filled - leaved;
+    const missedDates = allPastDateStrs.filter(d => !filledSet.has(d) && !leaveSet.has(d));
     return {
       userId: u.userId,
       name: u.name,
@@ -254,6 +263,10 @@ export function generateGuanxinMockData(
       leaveDays: leaved,
       totalDaysInMonth: pastDays,
       fillRate: pastDays > 0 ? (filled / pastDays) * 100 : 0,
+      missedDates,
+      filledDates: Array.from(filledSet).sort(),
+      leaveDates: Array.from(leaveSet).sort(),
+      isPerfectAttendance: missed <= 0,
     };
   });
 

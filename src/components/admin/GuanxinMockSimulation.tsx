@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
+  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,
+  LineChart, Line
 } from 'recharts';
-import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings } from 'lucide-react';
-import { generateGuanxinMockData, MockGuanxinData, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
+import { RefreshCw, Search, Users, FileText, Calendar, Tag, Eye, Settings, Award, AlertCircle, TrendingUp } from 'lucide-react';
+import { generateGuanxinMockData, MockGuanxinData, MockGuanxinUserStat, THEME_GROUPS, GuanxinGenerateOptions } from '@/lib/guanxinMockDataGenerator';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
@@ -144,6 +145,43 @@ export function GuanxinMockSimulation() {
       startDow: getDay(ms),
     };
   }, [mockData]);
+
+  // Perfect attendance users
+  const perfectAttendanceUsers = useMemo(() => {
+    if (!mockData) return [];
+    return mockData.userStats.filter(u => u.isPerfectAttendance);
+  }, [mockData]);
+
+  // Users with absences, sorted by most missed days
+  const absentUsers = useMemo(() => {
+    if (!mockData) return [];
+    return mockData.userStats
+      .filter(u => u.missedDays > 0)
+      .sort((a, b) => b.missedDays - a.missedDays);
+  }, [mockData]);
+
+  // Keyword frequency with percentage
+  const keywordFrequency = useMemo(() => {
+    if (!mockData) return [];
+    const total = mockData.entries.length;
+    return mockData.keywordStats.map(ks => ({
+      ...ks,
+      frequency: total > 0 ? ((ks.count / total) * 100).toFixed(1) : '0',
+    }));
+  }, [mockData]);
+
+  // Daily fill trend (entries per day across all users)
+  const dailyFillTrend = useMemo(() => {
+    if (!mockData) return [];
+    const dateCount = new Map<string, number>();
+    mockData.entries.forEach(e => dateCount.set(e.date, (dateCount.get(e.date) || 0) + 1));
+    return Array.from(dateCount.entries())
+      .map(([date, count]) => ({ date: date.slice(5), count, rate: ((count / mockData.users.length) * 100) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [mockData]);
+
+  // Selected user for absence detail view
+  const [selectedAbsentUser, setSelectedAbsentUser] = useState<MockGuanxinUserStat | null>(null);
 
   const settingsPanel = (
     <Card>
@@ -330,9 +368,11 @@ export function GuanxinMockSimulation() {
       </div>
 
       <Tabs defaultValue="stats">
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="stats">會員統計</TabsTrigger>
+          <TabsTrigger value="attendance">全勤與缺席</TabsTrigger>
           <TabsTrigger value="keywords">關鍵字分析</TabsTrigger>
+          <TabsTrigger value="trend">每日趨勢</TabsTrigger>
           <TabsTrigger value="calendar">月曆總覽</TabsTrigger>
           <TabsTrigger value="search">搜尋</TabsTrigger>
         </TabsList>
@@ -448,6 +488,125 @@ export function GuanxinMockSimulation() {
           </Card>
         </TabsContent>
 
+        {/* Attendance tab */}
+        <TabsContent value="attendance" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Perfect attendance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Award className="h-4 w-4 text-primary" /> 全勤榜
+                </CardTitle>
+                <CardDescription>
+                  本期間填寫率 100%（含請假）的會員，共 {perfectAttendanceUsers.length} 人
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {perfectAttendanceUsers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">本期間無全勤會員</p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {perfectAttendanceUsers.map((u, i) => (
+                      <div key={u.userId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                        <span className="text-lg">🏆</span>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{u.name}</span>
+                          <div className="text-xs text-muted-foreground">
+                            填寫 {u.filledDays} 天 · 請假 {u.leaveDays} 天
+                          </div>
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-primary/20">全勤</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Absence summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" /> 缺席排行
+                </CardTitle>
+                <CardDescription>
+                  缺席天數最多的會員（點擊查看缺席日期）
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {absentUsers.slice(0, 15).map(u => (
+                    <div
+                      key={u.userId}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/60 transition-colors"
+                      onClick={() => setSelectedAbsentUser(u)}
+                    >
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{u.name}</span>
+                        <div className="text-xs text-muted-foreground">
+                          填寫率 {u.fillRate.toFixed(0)}%
+                        </div>
+                      </div>
+                      <Badge variant="destructive">{u.missedDays} 天缺席</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Full absence detail table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">缺席詳情總表</CardTitle>
+              <CardDescription>所有有缺席記錄的會員及其缺席日期</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[400px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>會員</TableHead>
+                      <TableHead className="text-center">填寫天數</TableHead>
+                      <TableHead className="text-center">請假天數</TableHead>
+                      <TableHead className="text-center">缺席天數</TableHead>
+                      <TableHead>缺席日期</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {absentUsers.map(u => (
+                      <TableRow key={u.userId}>
+                        <TableCell className="font-medium">{u.name}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary">{u.filledDays}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {u.leaveDays > 0 ? <Badge variant="outline">{u.leaveDays}</Badge> : '0'}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="destructive">{u.missedDays}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-[300px]">
+                            {u.missedDates.slice(0, 10).map(d => (
+                              <span key={d} className="text-[10px] bg-destructive/10 text-destructive rounded px-1.5 py-0.5">
+                                {d.slice(5)}
+                              </span>
+                            ))}
+                            {u.missedDates.length > 10 && (
+                              <span className="text-[10px] text-muted-foreground">+{u.missedDates.length - 10}天</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Keywords tab */}
         <TabsContent value="keywords" className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -505,11 +664,12 @@ export function GuanxinMockSimulation() {
                       <TableHead>排名</TableHead>
                       <TableHead>關鍵字</TableHead>
                       <TableHead className="text-center">出現次數</TableHead>
+                      <TableHead className="text-center">出現頻率</TableHead>
                       <TableHead className="text-center">涉及會員數</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockData.keywordStats.map((ks, i) => (
+                    {keywordFrequency.map((ks, i) => (
                       <TableRow key={ks.keyword}>
                         <TableCell>
                           <span className={cn("font-bold", i < 5 && "text-primary")}>{i + 1}</span>
@@ -518,11 +678,45 @@ export function GuanxinMockSimulation() {
                           <Badge variant={i < 5 ? "default" : "secondary"}>{ks.keyword}</Badge>
                         </TableCell>
                         <TableCell className="text-center">{ks.count}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-sm font-medium">{ks.frequency}%</span>
+                        </TableCell>
                         <TableCell className="text-center">{ks.users.length}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Trend tab */}
+        <TabsContent value="trend" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" /> 每日填寫趨勢
+              </CardTitle>
+              <CardDescription>每天有多少人填寫觀心書（全部 {mockData.users.length} 位會員）</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dailyFillTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" fontSize={10} />
+                    <YAxis yAxisId="count" />
+                    <YAxis yAxisId="rate" orientation="right" unit="%" />
+                    <Tooltip formatter={(value: number, name: string) => [
+                      name === '填寫人數' ? `${value} 人` : `${value.toFixed(1)}%`,
+                      name
+                    ]} />
+                    <Legend />
+                    <Line yAxisId="count" type="monotone" dataKey="count" name="填寫人數" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    <Line yAxisId="rate" type="monotone" dataKey="rate" name="填寫率" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -678,6 +872,53 @@ export function GuanxinMockSimulation() {
           <div className="whitespace-pre-wrap text-sm leading-relaxed">
             {viewContent?.content}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Absence detail dialog */}
+      <Dialog open={!!selectedAbsentUser} onOpenChange={() => setSelectedAbsentUser(null)}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              📋 {selectedAbsentUser?.name} 缺席詳情
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAbsentUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-lg font-bold">{selectedAbsentUser.filledDays}</div>
+                  <div className="text-xs text-muted-foreground">已填寫</div>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="text-lg font-bold">{selectedAbsentUser.leaveDays}</div>
+                  <div className="text-xs text-muted-foreground">已請假</div>
+                </div>
+                <div className="bg-destructive/10 rounded-lg p-3">
+                  <div className="text-lg font-bold text-destructive">{selectedAbsentUser.missedDays}</div>
+                  <div className="text-xs text-muted-foreground">缺席</div>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2">缺席日期</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedAbsentUser.missedDates.map(d => (
+                    <Badge key={d} variant="destructive" className="text-xs">{d}</Badge>
+                  ))}
+                </div>
+              </div>
+              {selectedAbsentUser.leaveDates.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">請假日期</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedAbsentUser.leaveDates.map(d => (
+                      <Badge key={d} variant="outline" className="text-xs">{d}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
