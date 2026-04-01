@@ -266,6 +266,86 @@ export default function GuanxinAdmin() {
         </CardContent>
       </Card>
 
+      {/* Leave approval section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">請假審核管理</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>日期</TableHead>
+                <TableHead>會員</TableHead>
+                <TableHead>原因</TableHead>
+                <TableHead className="text-center">狀態</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredLeaves.slice(0, 50).map(leave => (
+                <TableRow key={leave.id}>
+                  <TableCell className="whitespace-nowrap">{leave.date}</TableCell>
+                  <TableCell>{userMap.get(leave.user_id) || leave.user_id.slice(0, 8)}</TableCell>
+                  <TableCell className="max-w-[150px] truncate">{leave.reason || '—'}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={
+                      leave.status === 'approved' ? 'default' :
+                      leave.status === 'rejected' ? 'destructive' : 'secondary'
+                    }>
+                      {leave.status === 'pending' ? '待審核' : leave.status === 'approved' ? '已批准' : '已拒絕'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {leave.status === 'pending' ? (
+                      <div className="flex gap-1 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-green-600 hover:text-green-700"
+                          onClick={async () => {
+                            try {
+                              await reviewLeave.mutateAsync({ leaveId: leave.id, status: 'approved' });
+                              toast({ title: '已批准請假' });
+                            } catch {
+                              toast({ title: '操作失敗', variant: 'destructive' });
+                            }
+                          }}
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => {
+                            setReviewingLeave(leave);
+                            setAdminNote('');
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {leave.reviewed_at ? format(new Date(leave.reviewed_at), 'MM/dd HH:mm') : ''}
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredLeaves.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    尚無請假紀錄
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       {/* View content dialog */}
       <Dialog open={!!viewContent} onOpenChange={() => setViewContent(null)}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
@@ -277,6 +357,46 @@ export default function GuanxinAdmin() {
           <div className="whitespace-pre-wrap text-sm leading-relaxed">
             {viewContent?.content}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject leave dialog */}
+      <Dialog open={!!reviewingLeave} onOpenChange={() => setReviewingLeave(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>拒絕請假</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {reviewingLeave?.date} · {userMap.get(reviewingLeave?.user_id) || ''}
+          </p>
+          <Textarea
+            value={adminNote}
+            onChange={e => setAdminNote(e.target.value)}
+            placeholder="拒絕原因（選填）"
+            className="min-h-[60px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewingLeave(null)}>取消</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await reviewLeave.mutateAsync({
+                    leaveId: reviewingLeave.id,
+                    status: 'rejected',
+                    adminNote: adminNote.trim() || undefined,
+                  });
+                  toast({ title: '已拒絕請假' });
+                  setReviewingLeave(null);
+                } catch {
+                  toast({ title: '操作失敗', variant: 'destructive' });
+                }
+              }}
+              disabled={reviewLeave.isPending}
+            >
+              確認拒絕
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
