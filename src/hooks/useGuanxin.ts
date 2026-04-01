@@ -16,6 +16,9 @@ export interface GuanxinLeave {
   user_id: string;
   date: string;
   reason: string | null;
+  status: string;
+  admin_note: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
