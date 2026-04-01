@@ -445,15 +445,34 @@ export default function Guanxin() {
             <DialogTitle>請假申請</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">請假日期</label>
-              <input
-                type="date"
-                value={leaveDate}
-                onChange={e => setLeaveDate(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">起始日期</label>
+                <input
+                  type="date"
+                  value={leaveStartDate}
+                  onChange={e => setLeaveStartDate(e.target.value)}
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">結束日期（選填）</label>
+                <input
+                  type="date"
+                  value={leaveEndDate}
+                  onChange={e => setLeaveEndDate(e.target.value)}
+                  min={leaveStartDate}
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
             </div>
+            {leaveStartDate && (
+              <p className="text-xs text-muted-foreground">
+                {leaveEndDate && leaveEndDate !== leaveStartDate
+                  ? `共 ${Math.floor((new Date(leaveEndDate).getTime() - new Date(leaveStartDate).getTime()) / 86400000) + 1} 天`
+                  : '請假 1 天'}
+              </p>
+            )}
             <div>
               <label className="text-sm font-medium mb-1 block">請假原因（選填）</label>
               <Textarea
@@ -469,7 +488,7 @@ export default function Guanxin() {
             <Button variant="outline" onClick={() => setShowLeaveDialog(false)}>取消</Button>
             <Button
               onClick={handleLeaveSubmit}
-              disabled={submitLeave.isPending || !leaveDate}
+              disabled={submitLeave.isPending || !leaveStartDate}
             >
               {submitLeave.isPending ? '送出中...' : '送出請假申請'}
             </Button>
