@@ -16,6 +16,9 @@ export interface GuanxinLeave {
   user_id: string;
   date: string;
   reason: string | null;
+  status: string;
+  admin_note: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
@@ -126,6 +129,29 @@ export function useCancelLeave() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guanxin-leaves'] });
+    },
+  });
+}
+
+// Admin: approve/reject leave
+export function useReviewLeave() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ leaveId, status, adminNote }: { leaveId: string; status: 'approved' | 'rejected'; adminNote?: string }) => {
+      const { error } = await supabase
+        .from('guanxin_leaves')
+        .update({
+          status,
+          admin_note: adminNote || null,
+          reviewed_at: new Date().toISOString(),
+        } as any)
+        .eq('id', leaveId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guanxin-leaves'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-guanxin-leaves'] });
     },
   });
 }

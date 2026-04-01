@@ -57,6 +57,7 @@ export default function Guanxin() {
   const [showForm, setShowForm] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveReason, setLeaveReason] = useState('');
+  const [leaveDate, setLeaveDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const monthKey = format(currentMonth, 'yyyy-MM');
   const { data: entries = [] } = useGuanxinEntries(monthKey);
@@ -157,17 +158,20 @@ export default function Guanxin() {
   };
 
   const handleLeaveSubmit = async () => {
-    if (!selectedDate) return;
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    if (leaveDates.has(dateStr)) {
+    if (!leaveDate) {
+      toast({ title: '請選擇請假日期', variant: 'destructive' });
+      return;
+    }
+    if (leaveDates.has(leaveDate)) {
       toast({ title: '該日已請假', variant: 'destructive' });
       return;
     }
     try {
-      await submitLeave.mutateAsync({ date: dateStr, reason: leaveReason.trim() || undefined });
-      toast({ title: '請假成功' });
+      await submitLeave.mutateAsync({ date: leaveDate, reason: leaveReason.trim() || undefined });
+      toast({ title: '請假申請已送出，等待管理員審核' });
       setShowLeaveDialog(false);
       setLeaveReason('');
+      setLeaveDate('');
     } catch {
       toast({ title: '請假失敗', variant: 'destructive' });
     }
@@ -315,7 +319,7 @@ export default function Guanxin() {
           <Button
             variant="outline"
             onClick={() => {
-              setSelectedDate(new Date());
+              setLeaveDate('');
               setShowLeaveDialog(true);
             }}
           >
@@ -333,20 +337,30 @@ export default function Guanxin() {
             <CardContent className="space-y-2">
               {leaves.map(leave => (
                 <div key={leave.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{leave.date}</span>
+                    <span className={cn(
+                      'text-xs px-1.5 py-0.5 rounded',
+                      leave.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                      leave.status === 'approved' && 'bg-green-100 text-green-800',
+                      leave.status === 'rejected' && 'bg-red-100 text-red-800',
+                    )}>
+                      {leave.status === 'pending' ? '待審核' : leave.status === 'approved' ? '已批准' : '已拒絕'}
+                    </span>
                     {leave.reason && (
-                      <span className="text-sm text-muted-foreground ml-2">({leave.reason})</span>
+                      <span className="text-sm text-muted-foreground">({leave.reason})</span>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive"
-                    onClick={() => handleCancelLeave(leave.id)}
-                  >
-                    取消
-                  </Button>
+                  {leave.status === 'pending' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => handleCancelLeave(leave.id)}
+                    >
+                      取消
+                    </Button>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -406,23 +420,36 @@ export default function Guanxin() {
       <Dialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              請假申請 - {selectedDate && format(selectedDate, 'yyyy/MM/dd')}
-            </DialogTitle>
+            <DialogTitle>請假申請</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={leaveReason}
-            onChange={e => setLeaveReason(e.target.value)}
-            placeholder="請假原因（選填）"
-            className="min-h-[80px]"
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">請假日期</label>
+              <input
+                type="date"
+                value={leaveDate}
+                onChange={e => setLeaveDate(e.target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">請假原因（選填）</label>
+              <Textarea
+                value={leaveReason}
+                onChange={e => setLeaveReason(e.target.value)}
+                placeholder="請輸入請假原因"
+                className="min-h-[80px]"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">送出後需等待管理員審核批准</p>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLeaveDialog(false)}>取消</Button>
             <Button
               onClick={handleLeaveSubmit}
-              disabled={submitLeave.isPending}
+              disabled={submitLeave.isPending || !leaveDate}
             >
-              {submitLeave.isPending ? '送出中...' : '確認請假'}
+              {submitLeave.isPending ? '送出中...' : '送出請假申請'}
             </Button>
           </DialogFooter>
         </DialogContent>
