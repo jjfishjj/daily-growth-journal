@@ -20,6 +20,10 @@ export default function GuanxinAdmin() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string>('all');
   const [viewContent, setViewContent] = useState<{ date: string; content: string; userName: string } | null>(null);
+  const [reviewingLeave, setReviewingLeave] = useState<any | null>(null);
+  const [adminNote, setAdminNote] = useState('');
+  const { toast } = useToast();
+  const reviewLeave = useReviewLeave();
 
   const monthKey = format(currentMonth, 'yyyy-MM');
   const { data: entries = [] } = useAllGuanxinEntries(monthKey);
