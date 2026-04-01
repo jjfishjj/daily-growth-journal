@@ -315,7 +315,7 @@ export default function Guanxin() {
           <Button
             variant="outline"
             onClick={() => {
-              setSelectedDate(new Date());
+              setLeaveDate('');
               setShowLeaveDialog(true);
             }}
           >
