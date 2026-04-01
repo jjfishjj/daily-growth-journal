@@ -337,20 +337,30 @@ export default function Guanxin() {
             <CardContent className="space-y-2">
               {leaves.map(leave => (
                 <div key={leave.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{leave.date}</span>
+                    <span className={cn(
+                      'text-xs px-1.5 py-0.5 rounded',
+                      leave.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                      leave.status === 'approved' && 'bg-green-100 text-green-800',
+                      leave.status === 'rejected' && 'bg-red-100 text-red-800',
+                    )}>
+                      {leave.status === 'pending' ? '待審核' : leave.status === 'approved' ? '已批准' : '已拒絕'}
+                    </span>
                     {leave.reason && (
-                      <span className="text-sm text-muted-foreground ml-2">({leave.reason})</span>
+                      <span className="text-sm text-muted-foreground">({leave.reason})</span>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive"
-                    onClick={() => handleCancelLeave(leave.id)}
-                  >
-                    取消
-                  </Button>
+                  {leave.status === 'pending' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => handleCancelLeave(leave.id)}
+                    >
+                      取消
+                    </Button>
+                  )}
                 </div>
               ))}
             </CardContent>
