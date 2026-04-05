@@ -86,6 +86,129 @@ export type Database = {
           },
         ]
       }
+      daily_matches: {
+        Row: {
+          compatibility_score: number
+          created_at: string
+          date: string
+          id: string
+          matched_user_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          compatibility_score?: number
+          created_at?: string
+          date?: string
+          id?: string
+          matched_user_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number
+          created_at?: string
+          date?: string
+          id?: string
+          matched_user_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      energy_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      energy_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          source: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      friend_relationships: {
+        Row: {
+          chat_bg_color: string | null
+          created_at: string
+          friend_id: string
+          id: string
+          intimacy_score: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_bg_color?: string | null
+          created_at?: string
+          friend_id: string
+          id?: string
+          intimacy_score?: number
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_bg_color?: string | null
+          created_at?: string
+          friend_id?: string
+          id?: string
+          intimacy_score?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guanxin_entries: {
         Row: {
           content: string
@@ -173,6 +296,59 @@ export type Database = {
         }
         Relationships: []
       }
+      interest_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      interest_tags: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_tags_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "interest_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -194,6 +370,45 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          cost: number
+          created_at: string
+          description: string | null
+          duration_days: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          stock: number | null
+          type: string
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          stock?: number | null
+          type?: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          stock?: number | null
+          type?: string
         }
         Relationships: []
       }
@@ -229,6 +444,70 @@ export type Database = {
           },
         ]
       }
+      user_interests: {
+        Row: {
+          created_at: string
+          id: string
+          interest_tag_id: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest_tag_id: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest_tag_id?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_interest_tag_id_fkey"
+            columns: ["interest_tag_id"]
+            isOneToOne: false
+            referencedRelation: "interest_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_items: {
+        Row: {
+          expires_at: string | null
+          id: string
+          purchased_at: string
+          shop_item_id: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string
+          purchased_at?: string
+          shop_item_id: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string
+          purchased_at?: string
+          shop_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_items_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -255,10 +534,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_energy_points: {
+        Args: {
+          _amount: number
+          _description: string
+          _source: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       get_platform_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      spend_energy_points: {
+        Args: {
+          _amount: number
+          _description: string
+          _source: string
           _user_id: string
         }
         Returns: boolean
