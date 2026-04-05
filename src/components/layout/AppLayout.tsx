@@ -13,7 +13,8 @@ import {
   Sparkles,
   Users,
   FlaskConical,
-  BookHeart
+  BookHeart,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
