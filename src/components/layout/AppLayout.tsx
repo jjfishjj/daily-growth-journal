@@ -28,6 +28,7 @@ const navItems = [
   { path: '/stats', label: '我的數據', icon: BarChart3 },
   { path: '/community', label: '平台動態', icon: Users },
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
+  { path: '/wallet', label: '能量錢包', icon: Zap },
 ];
 
 const adminNavItems = [
