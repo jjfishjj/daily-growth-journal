@@ -584,6 +584,74 @@ export default function Guanxin() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Detected Action Plans Dialog */}
+      <Dialog open={showActionDetect} onOpenChange={setShowActionDetect}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-primary" />
+              偵測到行動方案
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              從觀心書中找到 {detectedActions.length} 個 to do 項目，是否加入行動方案專區？
+            </p>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {detectedActions.map((item, i) => (
+                <label
+                  key={i}
+                  className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
+                >
+                  <Checkbox
+                    checked={selectedActions.has(i)}
+                    onCheckedChange={(checked) => {
+                      const next = new Set(selectedActions);
+                      if (checked) next.add(i);
+                      else next.delete(i);
+                      setSelectedActions(next);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm leading-relaxed flex-1">{item}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <span className="text-sm">提醒於</span>
+              {[1, 3, 7].map((d) => (
+                <Button
+                  key={d}
+                  size="sm"
+                  variant={defaultRemindDays === d ? 'default' : 'outline'}
+                  onClick={() => setDefaultRemindDays(d)}
+                >
+                  {d} 天後
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant={defaultRemindDays === 0 ? 'default' : 'outline'}
+                onClick={() => setDefaultRemindDays(0)}
+              >
+                不提醒
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowActionDetect(false)}>
+              略過
+            </Button>
+            <Button
+              onClick={handleConfirmDetectedActions}
+              disabled={selectedActions.size === 0 || createAction.isPending}
+            >
+              加入 {selectedActions.size} 筆
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
