@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUnreadMessageCount } from '@/hooks/useMessages';
 
+
 interface AppLayoutProps {
   children: ReactNode;
 }
