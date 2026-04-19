@@ -14,6 +14,10 @@ import {
   useSubmitLeave,
   useCancelLeave,
 } from '@/hooks/useGuanxin';
+import { parseToDoFromContent, useCreateAction } from '@/hooks/useGuanxinActions';
+import { ActionPlanPanel } from '@/components/guanxin/ActionPlanPanel';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, BookHeart, CalendarOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookHeart, CalendarOff, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** Check if a given date is allowed for submission based on current time */
