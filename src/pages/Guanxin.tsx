@@ -160,10 +160,39 @@ export default function Guanxin() {
       });
       toast({ title: editingId ? '已更新觀心書' : '觀心書已送出 ✨' });
       setShowForm(false);
+
+      // Auto-detect to-do items
+      const todos = parseToDoFromContent(content);
+      if (todos.length > 0) {
+        setDetectedActions(todos);
+        setSelectedActions(new Set(todos.map((_, i) => i)));
+        setDefaultRemindDays(3);
+        setShowActionDetect(true);
+      }
+
       setContent('');
       setEditingId(undefined);
     } catch {
       toast({ title: '送出失敗，請稍後再試', variant: 'destructive' });
+    }
+  };
+
+  const handleConfirmDetectedActions = async () => {
+    const items = Array.from(selectedActions).map((i) => detectedActions[i]);
+    try {
+      for (const c of items) {
+        await createAction.mutateAsync({
+          content: c,
+          source: 'auto',
+          remind_days: defaultRemindDays || null,
+        });
+      }
+      toast({ title: `已新增 ${items.length} 筆行動方案 🌱` });
+      setShowActionDetect(false);
+      setDetectedActions([]);
+      setSelectedActions(new Set());
+    } catch {
+      toast({ title: '建立失敗', variant: 'destructive' });
     }
   };
 
