@@ -46,6 +46,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const unread = useUnreadMessageCount();
 
   const handleSignOut = async () => {
     await signOut();
@@ -75,12 +76,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                     variant={location.pathname === item.path ? 'secondary' : 'ghost'}
                     size="sm"
                     className={cn(
-                      'gap-2',
+                      'gap-2 relative',
                       location.pathname === item.path && 'bg-secondary'
                     )}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {item.path === '/messages' && unread > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-0.5">{unread}</Badge>
+                    )}
                   </Button>
                 </Link>
               ))}
