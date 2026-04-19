@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { MessageCircle, Send, User as UserIcon, ArrowLeft, Loader2 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
@@ -43,7 +43,7 @@ export default function Messages() {
               </h1>
               <p className="text-xs text-muted-foreground mt-1">與道友互傳訊息</p>
             </div>
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">載入中...</div>
               ) : !conversations?.length ? (
@@ -85,7 +85,7 @@ export default function Messages() {
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </Card>
 
           {/* Thread */}
@@ -150,7 +150,7 @@ function Thread({ partnerId, onBack }: { partnerId: string; onBack: () => void }
         </div>
       </div>
 
-      <ScrollArea className="flex-1" viewportRef={scrollRef as any}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-3">
           {isLoading ? (
             <div className="text-center text-muted-foreground text-sm">載入中...</div>
@@ -186,7 +186,7 @@ function Thread({ partnerId, onBack }: { partnerId: string; onBack: () => void }
             })
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="p-3 border-t flex gap-2">
         <Input
