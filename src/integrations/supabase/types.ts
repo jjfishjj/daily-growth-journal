@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_notifications: {
+        Row: {
+          action_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          notify_date: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notify_date?: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notify_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_notifications_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "guanxin_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_draws: {
         Row: {
           compatibility_score: number | null
@@ -289,6 +324,56 @@ export type Database = {
           to_user_id?: string
         }
         Relationships: []
+      }
+      guanxin_actions: {
+        Row: {
+          completed_at: string | null
+          content: string
+          created_at: string
+          guanxin_entry_id: string | null
+          id: string
+          is_completed: boolean
+          remind_at: string | null
+          remind_days: number | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content: string
+          created_at?: string
+          guanxin_entry_id?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at?: string | null
+          remind_days?: number | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          guanxin_entry_id?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at?: string | null
+          remind_days?: number | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guanxin_actions_guanxin_entry_id_fkey"
+            columns: ["guanxin_entry_id"]
+            isOneToOne: false
+            referencedRelation: "guanxin_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guanxin_entries: {
         Row: {
@@ -706,6 +791,7 @@ export type Database = {
         Args: { _user_a: string; _user_b: string }
         Returns: number
       }
+      complete_action: { Args: { _action_id: string }; Returns: Json }
       get_draw_cost: { Args: { _draw_number: number }; Returns: number }
       get_platform_stats: { Args: never; Returns: Json }
       has_role: {

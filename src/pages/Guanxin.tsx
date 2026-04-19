@@ -14,6 +14,10 @@ import {
   useSubmitLeave,
   useCancelLeave,
 } from '@/hooks/useGuanxin';
+import { parseToDoFromContent, useCreateAction } from '@/hooks/useGuanxinActions';
+import { ActionPlanPanel } from '@/components/guanxin/ActionPlanPanel';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +25,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, BookHeart, CalendarOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookHeart, CalendarOff, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** Check if a given date is allowed for submission based on current time */
@@ -66,6 +70,11 @@ export default function Guanxin() {
   const submitGuanxin = useSubmitGuanxin();
   const submitLeave = useSubmitLeave();
   const cancelLeave = useCancelLeave();
+  const createAction = useCreateAction();
+  const [detectedActions, setDetectedActions] = useState<string[]>([]);
+  const [selectedActions, setSelectedActions] = useState<Set<number>>(new Set());
+  const [showActionDetect, setShowActionDetect] = useState(false);
+  const [defaultRemindDays, setDefaultRemindDays] = useState(3);
 
   // Calendar data
   const monthStart = startOfMonth(currentMonth);
@@ -151,10 +160,39 @@ export default function Guanxin() {
       });
       toast({ title: editingId ? '已更新觀心書' : '觀心書已送出 ✨' });
       setShowForm(false);
+
+      // Auto-detect to-do items
+      const todos = parseToDoFromContent(content);
+      if (todos.length > 0) {
+        setDetectedActions(todos);
+        setSelectedActions(new Set(todos.map((_, i) => i)));
+        setDefaultRemindDays(3);
+        setShowActionDetect(true);
+      }
+
       setContent('');
       setEditingId(undefined);
     } catch {
       toast({ title: '送出失敗，請稍後再試', variant: 'destructive' });
+    }
+  };
+
+  const handleConfirmDetectedActions = async () => {
+    const items = Array.from(selectedActions).map((i) => detectedActions[i]);
+    try {
+      for (const c of items) {
+        await createAction.mutateAsync({
+          content: c,
+          source: 'auto',
+          remind_days: defaultRemindDays || null,
+        });
+      }
+      toast({ title: `已新增 ${items.length} 筆行動方案 🌱` });
+      setShowActionDetect(false);
+      setDetectedActions([]);
+      setSelectedActions(new Set());
+    } catch {
+      toast({ title: '建立失敗', variant: 'destructive' });
     }
   };
 
@@ -218,6 +256,22 @@ export default function Guanxin() {
           </h1>
           <p className="text-muted-foreground mt-1">每日觀照內心，記錄成長軌跡</p>
         </div>
+
+        <Tabs defaultValue="journal" className="w-full">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="journal" className="gap-2">
+              <BookHeart className="h-4 w-4" /> 觀心書
+            </TabsTrigger>
+            <TabsTrigger value="actions" className="gap-2">
+              <ListChecks className="h-4 w-4" /> 行動方案
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="actions" className="mt-6">
+            <ActionPlanPanel />
+          </TabsContent>
+
+          <TabsContent value="journal" className="mt-6 space-y-6">
 
         {/* Stats Card */}
         <Card>
@@ -388,6 +442,8 @@ export default function Guanxin() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Write/Edit Form Dialog */}
@@ -526,6 +582,74 @@ export default function Guanxin() {
               );
             })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detected Action Plans Dialog */}
+      <Dialog open={showActionDetect} onOpenChange={setShowActionDetect}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-primary" />
+              偵測到行動方案
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              從觀心書中找到 {detectedActions.length} 個 to do 項目，是否加入行動方案專區？
+            </p>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {detectedActions.map((item, i) => (
+                <label
+                  key={i}
+                  className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
+                >
+                  <Checkbox
+                    checked={selectedActions.has(i)}
+                    onCheckedChange={(checked) => {
+                      const next = new Set(selectedActions);
+                      if (checked) next.add(i);
+                      else next.delete(i);
+                      setSelectedActions(next);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm leading-relaxed flex-1">{item}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <span className="text-sm">提醒於</span>
+              {[1, 3, 7].map((d) => (
+                <Button
+                  key={d}
+                  size="sm"
+                  variant={defaultRemindDays === d ? 'default' : 'outline'}
+                  onClick={() => setDefaultRemindDays(d)}
+                >
+                  {d} 天後
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant={defaultRemindDays === 0 ? 'default' : 'outline'}
+                onClick={() => setDefaultRemindDays(0)}
+              >
+                不提醒
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowActionDetect(false)}>
+              略過
+            </Button>
+            <Button
+              onClick={handleConfirmDetectedActions}
+              disabled={selectedActions.size === 0 || createAction.isPending}
+            >
+              加入 {selectedActions.size} 筆
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>
