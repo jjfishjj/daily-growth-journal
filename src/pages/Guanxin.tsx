@@ -70,6 +70,11 @@ export default function Guanxin() {
   const submitGuanxin = useSubmitGuanxin();
   const submitLeave = useSubmitLeave();
   const cancelLeave = useCancelLeave();
+  const createAction = useCreateAction();
+  const [detectedActions, setDetectedActions] = useState<string[]>([]);
+  const [selectedActions, setSelectedActions] = useState<Set<number>>(new Set());
+  const [showActionDetect, setShowActionDetect] = useState(false);
+  const [defaultRemindDays, setDefaultRemindDays] = useState(3);
 
   // Calendar data
   const monthStart = startOfMonth(currentMonth);
