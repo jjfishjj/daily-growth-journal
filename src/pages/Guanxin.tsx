@@ -442,6 +442,8 @@ export default function Guanxin() {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Write/Edit Form Dialog */}
