@@ -160,10 +160,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 >
                   <Button
                     variant={location.pathname === item.path ? 'secondary' : 'ghost'}
-                    className="w-full justify-start gap-2"
+                    className="w-full justify-start gap-2 relative"
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {item.path === '/messages' && unread > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-auto">{unread}</Badge>
+                    )}
                   </Button>
                 </Link>
               ))}
