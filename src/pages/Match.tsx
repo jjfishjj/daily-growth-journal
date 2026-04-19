@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Zap, Heart, MessageCircle, Loader2, User as UserIcon } from 'lucide-react';
+import { Sparkles, Zap, Heart, MessageCircle, Loader2, User as UserIcon, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useTodayDraws,
@@ -17,7 +17,7 @@ import {
   MAX_DRAWS_PER_DAY,
 } from '@/hooks/useMatching';
 import { useEnergyBalance } from '@/hooks/useEnergyPoints';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,7 @@ export default function Match() {
   const { data: balance } = useEnergyBalance();
   const { data: favorites } = useMyFavorites();
   const performDraw = usePerformDraw();
+  const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState<string | null>(null);
   const [greetingOpen, setGreetingOpen] = useState<string | null>(null);
   const [greetingMsg, setGreetingMsg] = useState('哈囉！很高興認識你 🙏');
@@ -90,7 +91,7 @@ export default function Match() {
             <Sparkles className="h-6 w-6 text-primary" />
             每日一抽
           </h1>
-          <p className="text-muted-foreground mt-1">透過興趣與修行找到同頻的同修</p>
+          <p className="text-muted-foreground mt-1">透過興趣與修行找到同頻的道友</p>
         </div>
 
         {/* Status card */}
@@ -156,6 +157,7 @@ export default function Match() {
                 isFavorited={favoriteIds.has(draw.matched_user_id!)}
                 onViewProfile={() => setProfileOpen(draw.matched_user_id!)}
                 onGreet={() => setGreetingOpen(draw.matched_user_id!)}
+                onMessage={() => navigate(`/messages?to=${draw.matched_user_id!}`)}
                 onToggleFav={() => toggleFav.mutate({ favoritedUserId: draw.matched_user_id!, favorite: !favoriteIds.has(draw.matched_user_id!) })}
               />
             ))
@@ -166,7 +168,7 @@ export default function Match() {
         <Dialog open={!!profileOpen} onOpenChange={open => !open && setProfileOpen(null)}>
           <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>同修檔案</DialogTitle>
+              <DialogTitle>道友檔案</DialogTitle>
             </DialogHeader>
             {profileOpen && <ProfileView userId={profileOpen} />}
           </DialogContent>
@@ -192,13 +194,14 @@ export default function Match() {
   );
 }
 
-function MatchCard({ userId, score, drawNumber, isFavorited, onViewProfile, onGreet, onToggleFav }: {
+function MatchCard({ userId, score, drawNumber, isFavorited, onViewProfile, onGreet, onMessage, onToggleFav }: {
   userId: string;
   score: number;
   drawNumber: number;
   isFavorited: boolean;
   onViewProfile: () => void;
   onGreet: () => void;
+  onMessage: () => void;
   onToggleFav: () => void;
 }) {
   const { data: profile } = useUserPublicProfile(userId);
@@ -207,9 +210,13 @@ function MatchCard({ userId, score, drawNumber, isFavorited, onViewProfile, onGr
     <Card>
       <CardContent className="pt-5">
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <button
+            onClick={onViewProfile}
+            className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 hover:bg-primary/20 transition-colors"
+            aria-label="查看檔案"
+          >
             <UserIcon className="h-6 w-6 text-primary" />
-          </div>
+          </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <button onClick={onViewProfile} className="font-medium hover:underline truncate">
@@ -236,8 +243,11 @@ function MatchCard({ userId, score, drawNumber, isFavorited, onViewProfile, onGr
           <Button variant="outline" size="sm" onClick={onViewProfile} className="flex-1">
             查看檔案
           </Button>
-          <Button size="sm" onClick={onGreet} className="flex-1">
+          <Button variant="outline" size="sm" onClick={onGreet}>
             <MessageCircle className="h-3.5 w-3.5 mr-1" /> 打招呼
+          </Button>
+          <Button size="sm" onClick={onMessage} className="flex-1">
+            <Send className="h-3.5 w-3.5 mr-1" /> 傳訊息
           </Button>
           <Button variant="ghost" size="sm" onClick={onToggleFav}>
             <Heart className={`h-4 w-4 ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
