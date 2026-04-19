@@ -515,6 +515,57 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          from_user_id: string
+          id: string
+          is_read: boolean
+          to_user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_user_id: string
+          id?: string
+          is_read?: boolean
+          to_user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          is_read?: boolean
+          to_user_id?: string
+        }
+        Relationships: []
+      }
+      mock_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          handle: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          handle: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          handle?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profile_details: {
         Row: {
           avatar_url: string | null
@@ -778,6 +829,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_seed_mock_user: {
+        Args: {
+          _bio: string
+          _habit_ids: string[]
+          _handle: string
+          _ideal_friend_type: string
+          _keywords: string[]
+          _practice_goal: string
+          _region: string
+        }
+        Returns: string
+      }
       award_energy_points: {
         Args: {
           _amount: number
@@ -793,6 +856,16 @@ export type Database = {
       }
       complete_action: { Args: { _action_id: string }; Returns: Json }
       get_draw_cost: { Args: { _draw_number: number }; Returns: number }
+      get_my_conversations: {
+        Args: never
+        Returns: {
+          last_at: string
+          last_message: string
+          partner_id: string
+          partner_name: string
+          unread_count: number
+        }[]
+      }
       get_platform_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {

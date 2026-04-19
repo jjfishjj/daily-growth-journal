@@ -9,6 +9,7 @@ import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
 import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
 import { GuanxinMockSimulation } from '@/components/admin/GuanxinMockSimulation';
+import { MockUserSeeder } from '@/components/admin/MockUserSeeder';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
@@ -395,7 +396,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-10">
             <TabsTrigger value="overview">總覽</TabsTrigger>
             <TabsTrigger value="leaderboard" className="gap-1">
               <Trophy className="h-4 w-4" />
@@ -418,6 +419,10 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="guanxin" className="gap-1">
               觀心書
+            </TabsTrigger>
+            <TabsTrigger value="seed" className="gap-1">
+              <Users className="h-4 w-4" />
+              假用戶
             </TabsTrigger>
           </TabsList>
 
@@ -1033,6 +1038,11 @@ export default function Admin() {
                 <GuanxinMockSimulation />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* Mock User Seeder Tab */}
+          <TabsContent value="seed">
+            <MockUserSeeder />
           </TabsContent>
         </Tabs>
       </div>

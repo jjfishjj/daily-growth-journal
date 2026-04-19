@@ -14,9 +14,14 @@ import {
   Users,
   FlaskConical,
   BookHeart,
-  Zap
+  Zap,
+  MessageCircle,
+  UserCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { useUnreadMessageCount } from '@/hooks/useMessages';
+
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -30,7 +35,8 @@ const navItems = [
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
   { path: '/wallet', label: '能量錢包', icon: Zap },
   { path: '/match', label: '每日一抽', icon: Sparkles },
-  { path: '/profile', label: '個人檔案', icon: Users },
+  { path: '/messages', label: '訊息', icon: MessageCircle },
+  { path: '/profile', label: '個人檔案', icon: UserCircle },
 ];
 
 const adminNavItems = [
@@ -41,6 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const unread = useUnreadMessageCount();
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,12 +77,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                     variant={location.pathname === item.path ? 'secondary' : 'ghost'}
                     size="sm"
                     className={cn(
-                      'gap-2',
+                      'gap-2 relative',
                       location.pathname === item.path && 'bg-secondary'
                     )}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {item.path === '/messages' && unread > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-0.5">{unread}</Badge>
+                    )}
                   </Button>
                 </Link>
               ))}
@@ -151,10 +161,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 >
                   <Button
                     variant={location.pathname === item.path ? 'secondary' : 'ghost'}
-                    className="w-full justify-start gap-2"
+                    className="w-full justify-start gap-2 relative"
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {item.path === '/messages' && unread > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-auto">{unread}</Badge>
+                    )}
                   </Button>
                 </Link>
               ))}
