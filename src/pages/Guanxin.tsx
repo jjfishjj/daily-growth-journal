@@ -257,6 +257,22 @@ export default function Guanxin() {
           <p className="text-muted-foreground mt-1">每日觀照內心，記錄成長軌跡</p>
         </div>
 
+        <Tabs defaultValue="journal" className="w-full">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="journal" className="gap-2">
+              <BookHeart className="h-4 w-4" /> 觀心書
+            </TabsTrigger>
+            <TabsTrigger value="actions" className="gap-2">
+              <ListChecks className="h-4 w-4" /> 行動方案
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="actions" className="mt-6">
+            <ActionPlanPanel />
+          </TabsContent>
+
+          <TabsContent value="journal" className="mt-6 space-y-6">
+
         {/* Stats Card */}
         <Card>
           <CardContent className="pt-6">
