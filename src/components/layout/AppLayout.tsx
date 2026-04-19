@@ -14,9 +14,13 @@ import {
   Users,
   FlaskConical,
   BookHeart,
-  Zap
+  Zap,
+  MessageCircle,
+  UserCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { useUnreadMessageCount } from '@/hooks/useMessages';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -30,7 +34,8 @@ const navItems = [
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
   { path: '/wallet', label: '能量錢包', icon: Zap },
   { path: '/match', label: '每日一抽', icon: Sparkles },
-  { path: '/profile', label: '個人檔案', icon: Users },
+  { path: '/messages', label: '訊息', icon: MessageCircle },
+  { path: '/profile', label: '個人檔案', icon: UserCircle },
 ];
 
 const adminNavItems = [
