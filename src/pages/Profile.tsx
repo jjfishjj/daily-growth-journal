@@ -180,7 +180,7 @@ export default function Profile() {
           <CardContent className="pt-6 flex items-start gap-3">
             <Target className="h-5 w-5 text-primary mt-0.5" />
             <div className="text-sm text-muted-foreground">
-              填得越完整，每日一抽配對的契合度就越精準。完成後到 <span className="font-medium text-foreground">每日一抽</span> 開始尋找同修吧！
+              填得越完整，每日一抽配對的契合度就越精準。完成後到 <span className="font-medium text-foreground">每日一抽</span> 開始尋找道友吧！
             </div>
           </CardContent>
         </Card>

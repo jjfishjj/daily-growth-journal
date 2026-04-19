@@ -112,12 +112,12 @@ export function MockUserSeeder() {
 
   const handleDelete = async (userId: string, handle: string) => {
     if (!confirm(`確定要刪除 ${handle}？此動作會移除其檔案、關鍵字、修行偏好等所有資料。`)) return;
-    const tables = [
+    const tables: Array<'user_keywords' | 'user_practice_preferences' | 'user_interests' | 'profile_details' | 'profiles' | 'mock_users'> = [
       'user_keywords', 'user_practice_preferences', 'user_interests',
       'profile_details', 'profiles', 'mock_users',
     ];
     for (const t of tables) {
-      await supabase.from(t as any).delete().eq('user_id', userId);
+      await supabase.from(t).delete().eq('user_id', userId);
     }
     qc.invalidateQueries({ queryKey: ['mock-users'] });
     toast.success(`已刪除 ${handle}`);
@@ -128,9 +128,9 @@ export function MockUserSeeder() {
     if (!confirm(`確定刪除全部 ${existing.length} 個假用戶？`)) return;
     setRunning(true);
     for (const m of existing) {
-      const tables = ['user_keywords', 'user_practice_preferences', 'user_interests', 'profile_details', 'profiles', 'mock_users'];
+      const tables: Array<'user_keywords' | 'user_practice_preferences' | 'user_interests' | 'profile_details' | 'profiles' | 'mock_users'> = ['user_keywords', 'user_practice_preferences', 'user_interests', 'profile_details', 'profiles', 'mock_users'];
       for (const t of tables) {
-        await supabase.from(t as any).delete().eq('user_id', m.user_id);
+        await supabase.from(t).delete().eq('user_id', m.user_id);
       }
     }
     setRunning(false);

@@ -9,6 +9,7 @@ import { AIAnalysis } from '@/components/admin/AIAnalysis';
 import { MockDataSimulation } from '@/components/admin/MockDataSimulation';
 import GuanxinAdmin from '@/components/admin/GuanxinAdmin';
 import { GuanxinMockSimulation } from '@/components/admin/GuanxinMockSimulation';
+import { MockUserSeeder } from '@/components/admin/MockUserSeeder';
 import { SwitchableChart } from '@/components/charts/SwitchableChart';
 import { 
   BarChart, 
@@ -1037,6 +1038,11 @@ export default function Admin() {
                 <GuanxinMockSimulation />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          {/* Mock User Seeder Tab */}
+          <TabsContent value="seed">
+            <MockUserSeeder />
           </TabsContent>
         </Tabs>
       </div>
