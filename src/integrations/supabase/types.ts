@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_draws: {
+        Row: {
+          compatibility_score: number | null
+          cost: number
+          created_at: string
+          date: string
+          draw_number: number
+          id: string
+          matched_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          compatibility_score?: number | null
+          cost?: number
+          created_at?: string
+          date?: string
+          draw_number: number
+          id?: string
+          matched_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number | null
+          cost?: number
+          created_at?: string
+          date?: string
+          draw_number?: number
+          id?: string
+          matched_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_entries: {
         Row: {
           created_at: string
@@ -176,6 +209,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_friends: {
+        Row: {
+          created_at: string
+          favorited_user_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          favorited_user_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          favorited_user_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friend_relationships: {
         Row: {
           chat_bg_color: string | null
@@ -206,6 +260,33 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      greetings: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          is_read: boolean
+          message: string
+          to_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          to_user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          to_user_id?: string
         }
         Relationships: []
       }
@@ -348,6 +429,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profile_details: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          ideal_friend_type: string | null
+          practice_goal: string | null
+          region: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          ideal_friend_type?: string | null
+          practice_goal?: string | null
+          region?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          ideal_friend_type?: string | null
+          practice_goal?: string | null
+          region?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -508,6 +625,48 @@ export type Database = {
           },
         ]
       }
+      user_keywords: {
+        Row: {
+          created_at: string
+          id: string
+          keyword: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          keyword: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          keyword?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_practice_preferences: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -543,6 +702,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_compatibility: {
+        Args: { _user_a: string; _user_b: string }
+        Returns: number
+      }
+      get_draw_cost: { Args: { _draw_number: number }; Returns: number }
       get_platform_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
@@ -550,6 +714,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      perform_daily_draw: { Args: never; Returns: Json }
+      send_greeting: {
+        Args: { _message: string; _to_user: string }
+        Returns: Json
       }
       spend_energy_points: {
         Args: {

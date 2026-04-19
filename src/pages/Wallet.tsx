@@ -54,15 +54,15 @@ export default function Wallet() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <Link to="/shop">
+          <Link to="/profile">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="pt-4 pb-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
                   <ShoppingBag className="h-5 w-5 text-accent-foreground" />
                 </div>
                 <div>
-                  <div className="font-medium text-sm">配配幣商城</div>
-                  <div className="text-xs text-muted-foreground">兌換道具</div>
+                  <div className="font-medium text-sm">個人檔案</div>
+                  <div className="text-xs text-muted-foreground">提升契合度</div>
                 </div>
               </CardContent>
             </Card>
