@@ -14,6 +14,8 @@ import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
 import Guanxin from "./pages/Guanxin";
 import Wallet from "./pages/Wallet";
+import Profile from "./pages/Profile";
+import Match from "./pages/Match";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

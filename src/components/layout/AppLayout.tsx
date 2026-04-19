@@ -29,6 +29,8 @@ const navItems = [
   { path: '/community', label: '平台動態', icon: Users },
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
   { path: '/wallet', label: '能量錢包', icon: Zap },
+  { path: '/match', label: '每日一抽', icon: Sparkles },
+  { path: '/profile', label: '個人檔案', icon: Users },
 ];
 
 const adminNavItems = [
