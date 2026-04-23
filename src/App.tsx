@@ -13,6 +13,7 @@ import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Simulation from "./pages/Simulation";
 import Guanxin from "./pages/Guanxin";
+import Declutter from "./pages/Declutter";
 import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Match from "./pages/Match";
@@ -59,6 +60,7 @@ function AppRoutes() {
       <Route path="/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
       <Route path="/guanxin" element={<ProtectedRoute><Guanxin /></ProtectedRoute>} />
+      <Route path="/declutter" element={<ProtectedRoute><Declutter /></ProtectedRoute>} />
       <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/match" element={<ProtectedRoute><Match /></ProtectedRoute>} />

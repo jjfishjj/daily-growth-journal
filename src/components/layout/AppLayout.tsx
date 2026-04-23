@@ -16,7 +16,8 @@ import {
   BookHeart,
   Zap,
   MessageCircle,
-  UserCircle
+  UserCircle,
+  Recycle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ const navItems = [
   { path: '/stats', label: '我的數據', icon: BarChart3 },
   { path: '/community', label: '平台動態', icon: Users },
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
+  { path: '/declutter', label: '斷捨離', icon: Recycle },
   { path: '/wallet', label: '能量錢包', icon: Zap },
   { path: '/match', label: '每日一抽', icon: Sparkles },
   { path: '/messages', label: '訊息', icon: MessageCircle },
