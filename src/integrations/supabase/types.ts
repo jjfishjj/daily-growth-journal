@@ -184,6 +184,48 @@ export type Database = {
         }
         Relationships: []
       }
+      declutter_items: {
+        Row: {
+          category: string
+          completed_at: string | null
+          completion_reflection: string | null
+          content: string
+          created_at: string
+          date: string
+          id: string
+          is_completed: boolean
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          completed_at?: string | null
+          completion_reflection?: string | null
+          content: string
+          created_at?: string
+          date?: string
+          id?: string
+          is_completed?: boolean
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completed_at?: string | null
+          completion_reflection?: string | null
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          is_completed?: boolean
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       energy_balances: {
         Row: {
           balance: number
@@ -855,6 +897,10 @@ export type Database = {
         Returns: number
       }
       complete_action: { Args: { _action_id: string }; Returns: Json }
+      complete_declutter: {
+        Args: { _item_id: string; _reflection?: string }
+        Returns: Json
+      }
       get_draw_cost: { Args: { _draw_number: number }; Returns: number }
       get_my_conversations: {
         Args: never
