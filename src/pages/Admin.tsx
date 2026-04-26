@@ -1059,7 +1059,3 @@ export default function Admin() {
     </AppLayout>
   );
 }
-      </div>
-    </AppLayout>
-  );
-}
