@@ -5,18 +5,25 @@ import { Button } from '@/components/ui/button';
 import {
   CalendarDays, History, BarChart3, Shield, LogOut, Menu, X,
   Sparkles, Users, FlaskConical, BookHeart, Zap, MessageCircle,
-  UserCircle, Recycle, MessagesSquare, Smartphone,
+  UserCircle, Recycle, MessagesSquare, Smartphone, ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUnreadMessageCount } from '@/hooks/useMessages';
 import { NotificationBell } from '@/components/layout/NotificationBell';
-
+import { MarqueeBanner } from '@/components/layout/MarqueeBanner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
+// 主要功能列（露出於主導覽）
 const navItems = [
   { path: '/today', label: '今日填寫', icon: CalendarDays },
   { path: '/history', label: '歷史紀錄', icon: History },
@@ -25,10 +32,14 @@ const navItems = [
   { path: '/forum', label: '論壇', icon: MessagesSquare },
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
   { path: '/declutter', label: '斷捨離', icon: Recycle },
+];
+
+// 收進「個人」下拉選單
+const personalItems = [
+  { path: '/profile', label: '個人檔案', icon: UserCircle },
   { path: '/wallet', label: '能量錢包', icon: Zap },
   { path: '/match', label: '每日一抽', icon: Sparkles },
   { path: '/messages', label: '訊息', icon: MessageCircle },
-  { path: '/profile', label: '個人檔案', icon: UserCircle },
   { path: '/install', label: '安裝 App', icon: Smartphone },
 ];
 
@@ -46,10 +57,15 @@ export function AppLayout({ children }: AppLayoutProps) {
     await signOut();
   };
 
+  const isPersonalActive = personalItems.some(p => location.pathname === p.path);
+
   return (
     <div className="min-h-screen bg-gradient-morning">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
+        {/* Site-wide marquee */}
+        <MarqueeBanner />
+
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
@@ -76,13 +92,41 @@ export function AppLayout({ children }: AppLayoutProps) {
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
-                    {item.path === '/messages' && unread > 0 && (
-                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-0.5">{unread}</Badge>
-                    )}
                   </Button>
                 </Link>
               ))}
-              
+
+              {/* 個人下拉選單 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={isPersonalActive ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="gap-2 relative"
+                  >
+                    <UserCircle className="h-4 w-4" />
+                    個人
+                    {unread > 0 && (
+                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-0.5">{unread}</Badge>
+                    )}
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background">
+                  {personalItems.map(item => (
+                    <DropdownMenuItem key={item.path} asChild>
+                      <Link to={item.path} className="gap-2 cursor-pointer">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.label}</span>
+                        {item.path === '/messages' && unread > 0 && (
+                          <Badge className="h-4 min-w-4 px-1 text-[10px]">{unread}</Badge>
+                        )}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {isAdmin && (
                 <>
                   {adminNavItems.map(item => (
@@ -159,13 +203,32 @@ export function AppLayout({ children }: AppLayoutProps) {
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
-                    {item.path === '/messages' && unread > 0 && (
-                      <Badge className="h-4 min-w-4 px-1 text-[10px] ml-auto">{unread}</Badge>
-                    )}
                   </Button>
                 </Link>
               ))}
-              
+
+              <div className="pt-2 mt-2 border-t border-border/50">
+                <div className="px-3 py-1 text-xs text-muted-foreground">個人</div>
+                {personalItems.map(item => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button
+                      variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                      className="w-full justify-start gap-2 relative"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                      {item.path === '/messages' && unread > 0 && (
+                        <Badge className="h-4 min-w-4 px-1 text-[10px] ml-auto">{unread}</Badge>
+                      )}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+
               {isAdmin && (
                 <>
                   {adminNavItems.map(item => (
