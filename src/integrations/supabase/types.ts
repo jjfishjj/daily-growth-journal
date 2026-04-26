@@ -184,6 +184,56 @@ export type Database = {
         }
         Relationships: []
       }
+      declutter_actions: {
+        Row: {
+          completed_at: string | null
+          content: string
+          created_at: string
+          declutter_item_id: string | null
+          id: string
+          is_completed: boolean
+          remind_at: string | null
+          remind_days: number | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content: string
+          created_at?: string
+          declutter_item_id?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at?: string | null
+          remind_days?: number | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          declutter_item_id?: string | null
+          id?: string
+          is_completed?: boolean
+          remind_at?: string | null
+          remind_days?: number | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "declutter_actions_declutter_item_id_fkey"
+            columns: ["declutter_item_id"]
+            isOneToOne: false
+            referencedRelation: "declutter_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declutter_items: {
         Row: {
           category: string
@@ -306,6 +356,167 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      forum_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          habit_id: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          habit_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          habit_id?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_categories_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_posts: {
+        Row: {
+          category_id: string
+          comment_count: number
+          content: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          like_count: number
+          share_count: number
+          source_id: string | null
+          source_type: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          comment_count?: number
+          content: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          like_count?: number
+          share_count?: number
+          source_id?: string | null
+          source_type?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          comment_count?: number
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          like_count?: number
+          share_count?: number
+          source_id?: string | null
+          source_type?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "forum_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       friend_relationships: {
         Row: {
@@ -901,6 +1112,7 @@ export type Database = {
         Args: { _item_id: string; _reflection?: string }
         Returns: Json
       }
+      complete_declutter_action: { Args: { _action_id: string }; Returns: Json }
       get_draw_cost: { Args: { _draw_number: number }; Returns: number }
       get_my_conversations: {
         Args: never
@@ -912,6 +1124,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_my_notifications: { Args: never; Returns: Json }
       get_platform_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
@@ -920,6 +1133,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_forum_share: { Args: { _post_id: string }; Returns: undefined }
       perform_daily_draw: { Args: never; Returns: Json }
       send_greeting: {
         Args: { _message: string; _to_user: string }
