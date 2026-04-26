@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import Match from "./pages/Match";
 import Messages from "./pages/Messages";
 import Forum from "./pages/Forum";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ function AppRoutes() {
       <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
       <Route path="/forum/category/:slug" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
       <Route path="/forum/post/:postId" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+      <Route path="/install" element={<Install />} />
       <Route path="/simulation" element={<ProtectedRoute><AdminRoute><Simulation /></AdminRoute></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />

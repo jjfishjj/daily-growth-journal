@@ -18,6 +18,7 @@ if (isInIframe || isPreviewHost) {
     navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister()));
   }
 } else if ("serviceWorker" in navigator) {
+  // @ts-expect-error virtual module provided by vite-plugin-pwa at build time
   import("virtual:pwa-register").then(({ registerSW }) => {
     registerSW({ immediate: true });
   }).catch(() => { /* PWA disabled in dev */ });
