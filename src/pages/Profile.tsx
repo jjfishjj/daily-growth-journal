@@ -175,6 +175,23 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <Label>站內暱稱</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  placeholder="顯示在平台上的名稱"
+                  maxLength={30}
+                />
+                <Button onClick={handleSaveName} disabled={updateName.isPending || !displayName.trim()}>
+                  {updateName.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '更新'}
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                預設使用 Google 登入名稱，可隨時更改
+              </div>
+            </div>
+            <div>
               <Label>自我介紹</Label>
               <Textarea
                 value={bio}
