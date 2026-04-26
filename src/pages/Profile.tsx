@@ -24,6 +24,9 @@ import { useHabits } from '@/hooks/useHabits';
 import { useAuth } from '@/lib/auth';
 
 export default function Profile() {
+  const { user } = useAuth();
+  const { data: profile } = useMyProfile();
+  const updateName = useUpdateMyName();
   const { data: detail, isLoading } = useMyProfileDetail();
   const upsert = useUpsertProfileDetail();
   const { data: keywords } = useMyKeywords();
@@ -33,12 +36,25 @@ export default function Profile() {
   const { data: prefs } = useMyPracticePrefs();
   const togglePref = useTogglePracticePref();
 
+  const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [region, setRegion] = useState('');
   const [practiceGoal, setPracticeGoal] = useState('');
   const [idealFriendType, setIdealFriendType] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [initialized, setInitialized] = useState(false);
+  const [nameInitialized, setNameInitialized] = useState(false);
+
+  // Default name: use profile.name if set, otherwise fall back to Google metadata
+  if (profile !== undefined && !nameInitialized) {
+    const fallback =
+      (user?.user_metadata?.full_name as string | undefined) ||
+      (user?.user_metadata?.name as string | undefined) ||
+      user?.email?.split('@')[0] ||
+      '';
+    setDisplayName(profile?.name?.trim() ? profile.name : fallback);
+    setNameInitialized(true);
+  }
 
   if (detail && !initialized) {
     setBio(detail.bio ?? '');
@@ -47,6 +63,15 @@ export default function Profile() {
     setIdealFriendType(detail.ideal_friend_type ?? '');
     setInitialized(true);
   }
+
+  const handleSaveName = async () => {
+    try {
+      await updateName.mutateAsync(displayName);
+      toast.success('暱稱已更新');
+    } catch (e: any) {
+      toast.error(e.message ?? '更新失敗');
+    }
+  };
 
   const handleSave = async () => {
     try {
