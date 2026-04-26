@@ -17,10 +17,16 @@ import {
   useRemoveKeyword,
   useMyPracticePrefs,
   useTogglePracticePref,
+  useMyProfile,
+  useUpdateMyName,
 } from '@/hooks/useMatching';
 import { useHabits } from '@/hooks/useHabits';
+import { useAuth } from '@/lib/auth';
 
 export default function Profile() {
+  const { user } = useAuth();
+  const { data: profile } = useMyProfile();
+  const updateName = useUpdateMyName();
   const { data: detail, isLoading } = useMyProfileDetail();
   const upsert = useUpsertProfileDetail();
   const { data: keywords } = useMyKeywords();
@@ -30,12 +36,25 @@ export default function Profile() {
   const { data: prefs } = useMyPracticePrefs();
   const togglePref = useTogglePracticePref();
 
+  const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [region, setRegion] = useState('');
   const [practiceGoal, setPracticeGoal] = useState('');
   const [idealFriendType, setIdealFriendType] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [initialized, setInitialized] = useState(false);
+  const [nameInitialized, setNameInitialized] = useState(false);
+
+  // Default name: use profile.name if set, otherwise fall back to Google metadata
+  if (profile !== undefined && !nameInitialized) {
+    const fallback =
+      (user?.user_metadata?.full_name as string | undefined) ||
+      (user?.user_metadata?.name as string | undefined) ||
+      user?.email?.split('@')[0] ||
+      '';
+    setDisplayName(profile?.name?.trim() ? profile.name : fallback);
+    setNameInitialized(true);
+  }
 
   if (detail && !initialized) {
     setBio(detail.bio ?? '');
@@ -44,6 +63,15 @@ export default function Profile() {
     setIdealFriendType(detail.ideal_friend_type ?? '');
     setInitialized(true);
   }
+
+  const handleSaveName = async () => {
+    try {
+      await updateName.mutateAsync(displayName);
+      toast.success('暱稱已更新');
+    } catch (e: any) {
+      toast.error(e.message ?? '更新失敗');
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -146,6 +174,23 @@ export default function Profile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label>站內暱稱</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  placeholder="顯示在平台上的名稱"
+                  maxLength={30}
+                />
+                <Button onClick={handleSaveName} disabled={updateName.isPending || !displayName.trim()}>
+                  {updateName.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '更新'}
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                預設使用 Google 登入名稱，可隨時更改
+              </div>
+            </div>
             <div>
               <Label>自我介紹</Label>
               <Textarea
