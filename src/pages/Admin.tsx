@@ -33,7 +33,8 @@ import {
   Radar,
   Legend
 } from 'recharts';
-import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database } from 'lucide-react';
+import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database, Megaphone } from 'lucide-react';
+import { MarqueeAdmin } from '@/components/admin/MarqueeAdmin';
 import { DataDownload } from '@/components/admin/DownloadButtons';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
