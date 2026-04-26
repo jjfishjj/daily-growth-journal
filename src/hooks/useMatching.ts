@@ -24,6 +24,45 @@ export interface DailyDraw {
 export const DRAW_COSTS = [0, 10, 30];
 export const MAX_DRAWS_PER_DAY = 3;
 
+export function useMyProfile() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['my-profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, user_id, name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+}
+
+export function useUpdateMyName() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const trimmed = name.trim();
+      if (!trimmed) throw new Error('暱稱不可為空');
+      if (trimmed.length > 30) throw new Error('暱稱長度不可超過 30 字');
+      const { error } = await supabase
+        .from('profiles')
+        .update({ name: trimmed })
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-profile'] });
+    },
+  });
+}
+
 export function useMyProfileDetail() {
   const { user } = useAuth();
   return useQuery({
