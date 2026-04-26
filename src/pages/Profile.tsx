@@ -17,8 +17,11 @@ import {
   useRemoveKeyword,
   useMyPracticePrefs,
   useTogglePracticePref,
+  useMyProfile,
+  useUpdateMyName,
 } from '@/hooks/useMatching';
 import { useHabits } from '@/hooks/useHabits';
+import { useAuth } from '@/lib/auth';
 
 export default function Profile() {
   const { data: detail, isLoading } = useMyProfileDetail();
