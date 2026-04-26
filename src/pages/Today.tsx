@@ -268,20 +268,6 @@ export default function Today() {
           )}
         </div>
 
-        {/* Overall Comment */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium">本次評語</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="記錄這次的心得、感悟或反思..."
-              value={overallComment}
-              onChange={(e) => setOverallComment(e.target.value)}
-              className="min-h-[120px] resize-none bg-background/50"
-            />
-          </CardContent>
-        </Card>
 
         {/* Save Button */}
         <Button
