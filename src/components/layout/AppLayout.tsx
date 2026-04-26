@@ -2,26 +2,15 @@ import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { 
-  CalendarDays, 
-  History, 
-  BarChart3, 
-  Shield, 
-  LogOut, 
-  Menu, 
-  X,
-  Sparkles,
-  Users,
-  FlaskConical,
-  BookHeart,
-  Zap,
-  MessageCircle,
-  UserCircle,
-  Recycle
+import {
+  CalendarDays, History, BarChart3, Shield, LogOut, Menu, X,
+  Sparkles, Users, FlaskConical, BookHeart, Zap, MessageCircle,
+  UserCircle, Recycle, MessagesSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useUnreadMessageCount } from '@/hooks/useMessages';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 
 interface AppLayoutProps {
@@ -33,6 +22,7 @@ const navItems = [
   { path: '/history', label: '歷史紀錄', icon: History },
   { path: '/stats', label: '我的數據', icon: BarChart3 },
   { path: '/community', label: '平台動態', icon: Users },
+  { path: '/forum', label: '論壇', icon: MessagesSquare },
   { path: '/guanxin', label: '觀心書專區', icon: BookHeart },
   { path: '/declutter', label: '斷捨離', icon: Recycle },
   { path: '/wallet', label: '能量錢包', icon: Zap },
@@ -125,6 +115,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
             {/* User Actions */}
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <span className="hidden sm:inline text-sm text-muted-foreground">
                 {user?.email}
               </span>
