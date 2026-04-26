@@ -77,44 +77,6 @@ export default function Profile() {
           <p className="text-muted-foreground mt-1">完善資料，提升每日一抽的契合度</p>
         </div>
 
-        {/* Basic info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <UserIcon className="h-4 w-4" /> 基本資訊
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>自我介紹</Label>
-              <Textarea
-                value={bio}
-                onChange={e => setBio(e.target.value)}
-                placeholder="簡短介紹自己..."
-                maxLength={500}
-                rows={3}
-              />
-              <div className="text-xs text-muted-foreground text-right mt-1">{bio.length}/500</div>
-            </div>
-            <div>
-              <Label>所在地區</Label>
-              <Input value={region} onChange={e => setRegion(e.target.value)} placeholder="例：台北" maxLength={50} />
-            </div>
-            <div>
-              <Label>修行目標</Label>
-              <Input value={practiceGoal} onChange={e => setPracticeGoal(e.target.value)} placeholder="例：每日感恩冥想、保持平靜" maxLength={200} />
-            </div>
-            <div>
-              <Label>想認識的人類型</Label>
-              <Input value={idealFriendType} onChange={e => setIdealFriendType(e.target.value)} placeholder="例：同樣熱愛冥想的同修" maxLength={200} />
-            </div>
-            <Button onClick={handleSave} disabled={upsert.isPending} className="w-full">
-              {upsert.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              儲存基本資訊
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* Keywords */}
         <Card>
           <CardHeader>
@@ -173,6 +135,44 @@ export default function Profile() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Basic info (moved to bottom) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <UserIcon className="h-4 w-4" /> 基本資訊
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>自我介紹</Label>
+              <Textarea
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                placeholder="簡短介紹自己..."
+                maxLength={500}
+                rows={3}
+              />
+              <div className="text-xs text-muted-foreground text-right mt-1">{bio.length}/500</div>
+            </div>
+            <div>
+              <Label>所在地區</Label>
+              <Input value={region} onChange={e => setRegion(e.target.value)} placeholder="例：台北" maxLength={50} />
+            </div>
+            <div>
+              <Label>修行目標</Label>
+              <Input value={practiceGoal} onChange={e => setPracticeGoal(e.target.value)} placeholder="例：每日感恩冥想、保持平靜" maxLength={200} />
+            </div>
+            <div>
+              <Label>想認識的人類型</Label>
+              <Input value={idealFriendType} onChange={e => setIdealFriendType(e.target.value)} placeholder="例：同樣熱愛冥想的同修" maxLength={200} />
+            </div>
+            <Button onClick={handleSave} disabled={upsert.isPending} className="w-full">
+              {upsert.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              儲存基本資訊
+            </Button>
           </CardContent>
         </Card>
 
