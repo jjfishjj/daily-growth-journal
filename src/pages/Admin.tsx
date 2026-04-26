@@ -1049,7 +1049,16 @@ export default function Admin() {
           <TabsContent value="seed">
             <MockUserSeeder />
           </TabsContent>
+
+          {/* Marquee Admin Tab */}
+          <TabsContent value="marquee">
+            <MarqueeAdmin />
+          </TabsContent>
         </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
       </div>
     </AppLayout>
   );
