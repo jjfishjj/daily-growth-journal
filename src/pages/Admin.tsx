@@ -33,7 +33,8 @@ import {
   Radar,
   Legend
 } from 'recharts';
-import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database } from 'lucide-react';
+import { Shield, Users, FileText, TrendingUp, Activity, MessageSquare, Bot, UserCog, Trophy, Star, Award, Database, Megaphone } from 'lucide-react';
+import { MarqueeAdmin } from '@/components/admin/MarqueeAdmin';
 import { DataDownload } from '@/components/admin/DownloadButtons';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
@@ -396,7 +397,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-10">
+          <TabsList className="grid w-full grid-cols-11">
             <TabsTrigger value="overview">總覽</TabsTrigger>
             <TabsTrigger value="leaderboard" className="gap-1">
               <Trophy className="h-4 w-4" />
@@ -423,6 +424,10 @@ export default function Admin() {
             <TabsTrigger value="seed" className="gap-1">
               <Users className="h-4 w-4" />
               假用戶
+            </TabsTrigger>
+            <TabsTrigger value="marquee" className="gap-1">
+              <Megaphone className="h-4 w-4" />
+              跑馬燈
             </TabsTrigger>
           </TabsList>
 
@@ -1043,6 +1048,11 @@ export default function Admin() {
           {/* Mock User Seeder Tab */}
           <TabsContent value="seed">
             <MockUserSeeder />
+          </TabsContent>
+
+          {/* Marquee Admin Tab */}
+          <TabsContent value="marquee">
+            <MarqueeAdmin />
           </TabsContent>
         </Tabs>
       </div>

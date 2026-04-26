@@ -768,6 +768,69 @@ export type Database = {
           },
         ]
       }
+      marquee_config: {
+        Row: {
+          id: string
+          is_enabled: boolean
+          scroll_speed: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_enabled?: boolean
+          scroll_speed?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_enabled?: boolean
+          scroll_speed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marquee_messages: {
+        Row: {
+          bg_color: string
+          content: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          link_url: string | null
+          sort_order: number
+          starts_at: string | null
+          text_color: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          content: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          text_color?: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          content?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          sort_order?: number
+          starts_at?: string | null
+          text_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
