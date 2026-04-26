@@ -183,6 +183,21 @@ export default function Today() {
           </Card>
         )}
 
+        {/* Daily Guanxin Note (moved to top) */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-medium">每日觀心紀錄</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="記錄這次的心得、感悟或反思..."
+              value={overallComment}
+              onChange={(e) => setOverallComment(e.target.value)}
+              className="min-h-[120px] resize-none bg-background/50"
+            />
+          </CardContent>
+        </Card>
+
         {/* New Entry Form */}
         <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-border/50">
           <CardHeader className="pb-3">
