@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
-import { Sparkles, Trash2, Plus, CheckCircle2, Package, Brain, Heart, Repeat, MoreHorizontal } from 'lucide-react';
+import { Sparkles, Trash2, Plus, CheckCircle2, Package, Brain, Heart, Repeat, MoreHorizontal, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useDeclutterItems,
@@ -26,6 +26,8 @@ import {
   type DeclutterCategory,
   type DeclutterItem,
 } from '@/hooks/useDeclutter';
+import { DeclutterActionPlanPanel } from '@/components/declutter/DeclutterActionPlanPanel';
+import { useSearchParams } from 'react-router-dom';
 
 const CATEGORY_ICONS: Record<DeclutterCategory, typeof Package> = {
   object: Package,
@@ -38,6 +40,8 @@ const CATEGORY_ICONS: Record<DeclutterCategory, typeof Package> = {
 const CATEGORIES: DeclutterCategory[] = ['object', 'thought', 'relation', 'habit', 'other'];
 
 export default function Declutter() {
+  const [search, setSearch] = useSearchParams();
+  const mainTab = (search.get('tab') === 'actions' ? 'actions' : 'items') as 'items' | 'actions';
   const [tab, setTab] = useState<'pending' | 'completed'>('pending');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<DeclutterCategory>('object');
@@ -171,6 +175,12 @@ export default function Declutter() {
           </p>
         </div>
 
+        <Tabs value={mainTab} onValueChange={(v) => setSearch(v === 'actions' ? { tab: 'actions' } : {})}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="items" className="gap-1"><Sparkles className="h-3.5 w-3.5" />斷捨離項目</TabsTrigger>
+            <TabsTrigger value="actions" className="gap-1"><ListTodo className="h-3.5 w-3.5" />行動方案</TabsTrigger>
+          </TabsList>
+          <TabsContent value="items" className="space-y-6 mt-6">
         {/* Stats */}
         <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-border/50">
           <CardContent className="p-4">
