@@ -18,6 +18,7 @@ import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Match from "./pages/Match";
 import Messages from "./pages/Messages";
+import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,9 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/match" element={<ProtectedRoute><Match /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+      <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+      <Route path="/forum/category/:slug" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+      <Route path="/forum/post/:postId" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
       <Route path="/simulation" element={<ProtectedRoute><AdminRoute><Simulation /></AdminRoute></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminRoute><Admin /></AdminRoute></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
