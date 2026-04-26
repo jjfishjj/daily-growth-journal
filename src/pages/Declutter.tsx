@@ -304,6 +304,11 @@ export default function Declutter() {
             )}
           </TabsContent>
         </Tabs>
+          </TabsContent>
+          <TabsContent value="actions" className="mt-6">
+            <DeclutterActionPlanPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Reflection Dialog */}
