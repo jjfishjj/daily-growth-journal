@@ -18,6 +18,7 @@ import Wallet from "./pages/Wallet";
 import Profile from "./pages/Profile";
 import Match from "./pages/Match";
 import Messages from "./pages/Messages";
+import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
