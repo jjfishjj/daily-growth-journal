@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   CalendarDays, History, BarChart3, Shield, LogOut, Menu, X,
   Sparkles, Users, FlaskConical, BookHeart, Zap, MessageCircle,
-  UserCircle, Recycle, MessagesSquare,
+  UserCircle, Recycle, MessagesSquare, Smartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,7 @@ const navItems = [
   { path: '/match', label: '每日一抽', icon: Sparkles },
   { path: '/messages', label: '訊息', icon: MessageCircle },
   { path: '/profile', label: '個人檔案', icon: UserCircle },
+  { path: '/install', label: '安裝 App', icon: Smartphone },
 ];
 
 const adminNavItems = [
