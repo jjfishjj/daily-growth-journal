@@ -294,8 +294,9 @@ export default function Guanxin() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="actions" className="mt-6">
+          <TabsContent value="actions" className="mt-6 space-y-6">
             <ActionPlanPanel />
+            <RecurringActionsPanel />
           </TabsContent>
 
           <TabsContent value="journal" className="mt-6 space-y-6">
