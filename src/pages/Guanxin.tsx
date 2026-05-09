@@ -177,7 +177,7 @@ export default function Guanxin() {
       return;
     }
     try {
-      await submitGuanxin.mutateAsync({
+      const entryId = await submitGuanxin.mutateAsync({
         date: format(selectedDate, 'yyyy-MM-dd'),
         content: content.trim(),
         existingId: editingId,
@@ -191,6 +191,7 @@ export default function Guanxin() {
         setDetectedActions(todos);
         setSelectedActions(new Set(todos.map((_, i) => i)));
         setDefaultRemindDays(3);
+        setCurrentEntryId(entryId ?? null);
         setShowActionDetect(true);
       }
 
@@ -209,12 +210,14 @@ export default function Guanxin() {
           content: c,
           source: 'auto',
           remind_days: defaultRemindDays || null,
+          guanxin_entry_id: currentEntryId,
         });
       }
       toast({ title: `已新增 ${items.length} 筆行動方案 🌱` });
       setShowActionDetect(false);
       setDetectedActions([]);
       setSelectedActions(new Set());
+      setCurrentEntryId(null);
     } catch {
       toast({ title: '建立失敗', variant: 'destructive' });
     }
