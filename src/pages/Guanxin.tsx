@@ -626,25 +626,44 @@ export default function Guanxin() {
             <p className="text-sm text-muted-foreground">
               從觀心書中找到 {detectedActions.length} 個 to do 項目，是否加入行動方案專區？
             </p>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {detectedActions.map((item, i) => (
-                <label
-                  key={i}
-                  className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
-                >
-                  <Checkbox
-                    checked={selectedActions.has(i)}
-                    onCheckedChange={(checked) => {
-                      const next = new Set(selectedActions);
-                      if (checked) next.add(i);
-                      else next.delete(i);
-                      setSelectedActions(next);
-                    }}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm leading-relaxed flex-1">{item}</span>
-                </label>
-              ))}
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {detectedActions.map((item, i) => {
+                const matches = similarMatches[i] ?? [];
+                return (
+                  <label
+                    key={i}
+                    className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
+                  >
+                    <Checkbox
+                      checked={selectedActions.has(i)}
+                      onCheckedChange={(checked) => {
+                        const next = new Set(selectedActions);
+                        if (checked) next.add(i);
+                        else next.delete(i);
+                        setSelectedActions(next);
+                      }}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 space-y-1.5">
+                      <span className="text-sm leading-relaxed block">{item}</span>
+                      {matches.length > 0 && (
+                        <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-2 space-y-1">
+                          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                            ⚠️ 與過去 {matches.length} 筆 to do 類似
+                          </p>
+                          {matches.map((m, j) => (
+                            <p key={j} className="text-xs text-amber-800/90 dark:text-amber-300/90">
+                              • {format(parseISO(m.date), 'M月d日')}
+                              {m.completed ? '（已完成）' : '（未完成）'}：
+                              <span className="opacity-80">{m.content}</span>
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
             </div>
             <div className="flex items-center gap-2 pt-2">
               <span className="text-sm">提醒於</span>
