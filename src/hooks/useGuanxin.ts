@@ -106,15 +106,20 @@ export function useSubmitGuanxin() {
           .update({ content, updated_at: new Date().toISOString() })
           .eq('id', existingId);
         if (error) throw error;
+        return existingId;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('guanxin_entries')
-          .insert({ user_id: user!.id, date, content });
+          .insert({ user_id: user!.id, date, content })
+          .select('id')
+          .single();
         if (error) throw error;
+        return data.id as string;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guanxin-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['guanxin-entry-date-map'] });
     },
   });
 }
