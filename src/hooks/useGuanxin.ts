@@ -48,6 +48,26 @@ export function useGuanxinEntries(month?: string) {
   });
 }
 
+/** Lightweight: fetch all entry id+date for similarity lookups */
+export function useGuanxinEntryDateMap() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['guanxin-entry-date-map', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('guanxin_entries')
+        .select('id, date')
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      const map = new Map<string, string>();
+      (data ?? []).forEach((row: { id: string; date: string }) => map.set(row.id, row.date));
+      return map;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+}
+
 export function useGuanxinLeaves(month?: string) {
   const { user } = useAuth();
   return useQuery({
@@ -86,15 +106,20 @@ export function useSubmitGuanxin() {
           .update({ content, updated_at: new Date().toISOString() })
           .eq('id', existingId);
         if (error) throw error;
+        return existingId;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('guanxin_entries')
-          .insert({ user_id: user!.id, date, content });
+          .insert({ user_id: user!.id, date, content })
+          .select('id')
+          .single();
         if (error) throw error;
+        return data.id as string;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guanxin-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['guanxin-entry-date-map'] });
     },
   });
 }

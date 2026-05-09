@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay, addDays } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isSameDay, subDays, isAfter, isBefore, startOfDay, addDays, parseISO } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +14,11 @@ import {
   useSubmitLeave,
   useCancelLeave,
 } from '@/hooks/useGuanxin';
-import { parseToDoFromContent, useCreateAction } from '@/hooks/useGuanxinActions';
+import { parseToDoFromContent, useCreateAction, useGuanxinActions } from '@/hooks/useGuanxinActions';
+import { useGuanxinEntryDateMap } from '@/hooks/useGuanxin';
 import { ActionPlanPanel } from '@/components/guanxin/ActionPlanPanel';
+import { RecurringActionsPanel } from '@/components/guanxin/RecurringActionsPanel';
+import { similarity, SIMILARITY_THRESHOLD } from '@/lib/actionSimilarity';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -71,10 +74,31 @@ export default function Guanxin() {
   const submitLeave = useSubmitLeave();
   const cancelLeave = useCancelLeave();
   const createAction = useCreateAction();
+  const { data: allActions = [] } = useGuanxinActions('all');
+  const { data: entryDateMap } = useGuanxinEntryDateMap();
   const [detectedActions, setDetectedActions] = useState<string[]>([]);
   const [selectedActions, setSelectedActions] = useState<Set<number>>(new Set());
   const [showActionDetect, setShowActionDetect] = useState(false);
   const [defaultRemindDays, setDefaultRemindDays] = useState(3);
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
+
+  // For each detected to-do, find similar past actions
+  const similarMatches = useMemo(() => {
+    return detectedActions.map((todo) => {
+      const matches = allActions
+        .map((a) => {
+          const sim = similarity(todo, a.content);
+          const date = a.guanxin_entry_id
+            ? entryDateMap?.get(a.guanxin_entry_id) ?? a.created_at.slice(0, 10)
+            : a.created_at.slice(0, 10);
+          return { sim, date, content: a.content, completed: a.is_completed };
+        })
+        .filter((m) => m.sim >= SIMILARITY_THRESHOLD)
+        .sort((a, b) => b.sim - a.sim)
+        .slice(0, 3);
+      return matches;
+    });
+  }, [detectedActions, allActions, entryDateMap]);
 
   // Calendar data
   const monthStart = startOfMonth(currentMonth);
@@ -153,7 +177,7 @@ export default function Guanxin() {
       return;
     }
     try {
-      await submitGuanxin.mutateAsync({
+      const entryId = await submitGuanxin.mutateAsync({
         date: format(selectedDate, 'yyyy-MM-dd'),
         content: content.trim(),
         existingId: editingId,
@@ -167,6 +191,7 @@ export default function Guanxin() {
         setDetectedActions(todos);
         setSelectedActions(new Set(todos.map((_, i) => i)));
         setDefaultRemindDays(3);
+        setCurrentEntryId(entryId ?? null);
         setShowActionDetect(true);
       }
 
@@ -185,12 +210,14 @@ export default function Guanxin() {
           content: c,
           source: 'auto',
           remind_days: defaultRemindDays || null,
+          guanxin_entry_id: currentEntryId,
         });
       }
       toast({ title: `已新增 ${items.length} 筆行動方案 🌱` });
       setShowActionDetect(false);
       setDetectedActions([]);
       setSelectedActions(new Set());
+      setCurrentEntryId(null);
     } catch {
       toast({ title: '建立失敗', variant: 'destructive' });
     }
@@ -267,8 +294,9 @@ export default function Guanxin() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="actions" className="mt-6">
+          <TabsContent value="actions" className="mt-6 space-y-6">
             <ActionPlanPanel />
+            <RecurringActionsPanel />
           </TabsContent>
 
           <TabsContent value="journal" className="mt-6 space-y-6">
@@ -598,25 +626,44 @@ export default function Guanxin() {
             <p className="text-sm text-muted-foreground">
               從觀心書中找到 {detectedActions.length} 個 to do 項目，是否加入行動方案專區？
             </p>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {detectedActions.map((item, i) => (
-                <label
-                  key={i}
-                  className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
-                >
-                  <Checkbox
-                    checked={selectedActions.has(i)}
-                    onCheckedChange={(checked) => {
-                      const next = new Set(selectedActions);
-                      if (checked) next.add(i);
-                      else next.delete(i);
-                      setSelectedActions(next);
-                    }}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm leading-relaxed flex-1">{item}</span>
-                </label>
-              ))}
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {detectedActions.map((item, i) => {
+                const matches = similarMatches[i] ?? [];
+                return (
+                  <label
+                    key={i}
+                    className="flex items-start gap-2 p-2 rounded-md border cursor-pointer hover:bg-accent/50"
+                  >
+                    <Checkbox
+                      checked={selectedActions.has(i)}
+                      onCheckedChange={(checked) => {
+                        const next = new Set(selectedActions);
+                        if (checked) next.add(i);
+                        else next.delete(i);
+                        setSelectedActions(next);
+                      }}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 space-y-1.5">
+                      <span className="text-sm leading-relaxed block">{item}</span>
+                      {matches.length > 0 && (
+                        <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-2 space-y-1">
+                          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                            ⚠️ 與過去 {matches.length} 筆 to do 類似
+                          </p>
+                          {matches.map((m, j) => (
+                            <p key={j} className="text-xs text-amber-800/90 dark:text-amber-300/90">
+                              • {format(parseISO(m.date), 'M月d日')}
+                              {m.completed ? '（已完成）' : '（未完成）'}：
+                              <span className="opacity-80">{m.content}</span>
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
             </div>
             <div className="flex items-center gap-2 pt-2">
               <span className="text-sm">提醒於</span>
