@@ -14,8 +14,11 @@ import {
   useSubmitLeave,
   useCancelLeave,
 } from '@/hooks/useGuanxin';
-import { parseToDoFromContent, useCreateAction } from '@/hooks/useGuanxinActions';
+import { parseToDoFromContent, useCreateAction, useGuanxinActions } from '@/hooks/useGuanxinActions';
+import { useGuanxinEntryDateMap } from '@/hooks/useGuanxin';
 import { ActionPlanPanel } from '@/components/guanxin/ActionPlanPanel';
+import { RecurringActionsPanel } from '@/components/guanxin/RecurringActionsPanel';
+import { similarity, SIMILARITY_THRESHOLD } from '@/lib/actionSimilarity';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -71,10 +74,31 @@ export default function Guanxin() {
   const submitLeave = useSubmitLeave();
   const cancelLeave = useCancelLeave();
   const createAction = useCreateAction();
+  const { data: allActions = [] } = useGuanxinActions('all');
+  const { data: entryDateMap } = useGuanxinEntryDateMap();
   const [detectedActions, setDetectedActions] = useState<string[]>([]);
   const [selectedActions, setSelectedActions] = useState<Set<number>>(new Set());
   const [showActionDetect, setShowActionDetect] = useState(false);
   const [defaultRemindDays, setDefaultRemindDays] = useState(3);
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
+
+  // For each detected to-do, find similar past actions
+  const similarMatches = useMemo(() => {
+    return detectedActions.map((todo) => {
+      const matches = allActions
+        .map((a) => {
+          const sim = similarity(todo, a.content);
+          const date = a.guanxin_entry_id
+            ? entryDateMap?.get(a.guanxin_entry_id) ?? a.created_at.slice(0, 10)
+            : a.created_at.slice(0, 10);
+          return { sim, date, content: a.content, completed: a.is_completed };
+        })
+        .filter((m) => m.sim >= SIMILARITY_THRESHOLD)
+        .sort((a, b) => b.sim - a.sim)
+        .slice(0, 3);
+      return matches;
+    });
+  }, [detectedActions, allActions, entryDateMap]);
 
   // Calendar data
   const monthStart = startOfMonth(currentMonth);
