@@ -226,7 +226,21 @@ export default function Today() {
         {/* Daily Guanxin Note (moved to top) */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium">每日觀心紀錄</CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle className="text-lg font-medium">每日觀心紀錄</CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAiSummarize}
+                disabled={aiLoading}
+                className="text-xs h-7"
+              >
+                {aiLoading ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : null}
+                AI 摘要感覺
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Textarea
