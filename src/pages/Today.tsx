@@ -279,47 +279,58 @@ export default function Today() {
           </CardContent>
         </Card>
 
-        {/* Habits List */}
-        <div className="space-y-3">
-          {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-6 w-10 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-4 w-48" />
+        {/* Habits + Feelings (2-col on md+) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Habits List (left) */}
+          <div className="space-y-3">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-6 w-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            habits?.map((habit, index) => (
-              <div
-                key={habit.id}
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <HabitCard
-                  habit={habit}
-                  completed={habitStates[habit.id]?.completed ?? false}
-                  score={habitStates[habit.id]?.score ?? null}
-                  note={habitStates[habit.id]?.note ?? ''}
-                  onCompletedChange={(completed) => 
-                    updateHabit(habit.id, { completed })
-                  }
-                  onScoreChange={(score) => 
-                    updateHabit(habit.id, { score })
-                  }
-                  onNoteChange={(note) => 
-                    updateHabit(habit.id, { note })
-                  }
-                />
-              </div>
-            ))
-          )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              habits?.map((habit, index) => (
+                <div
+                  key={habit.id}
+                  className="animate-slide-up"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <HabitCard
+                    habit={habit}
+                    completed={habitStates[habit.id]?.completed ?? false}
+                    score={habitStates[habit.id]?.score ?? null}
+                    note={habitStates[habit.id]?.note ?? ''}
+                    onCompletedChange={(completed) =>
+                      updateHabit(habit.id, { completed })
+                    }
+                    onScoreChange={(score) =>
+                      updateHabit(habit.id, { score })
+                    }
+                    onNoteChange={(note) =>
+                      updateHabit(habit.id, { note })
+                    }
+                  />
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Feelings (right) */}
+          <div className="md:sticky md:top-4 md:self-start">
+            <FeelingsSelector
+              selected={selectedFeelings}
+              onToggle={toggleFeeling}
+            />
+          </div>
         </div>
 
 
