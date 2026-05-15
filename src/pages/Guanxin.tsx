@@ -275,7 +275,7 @@ export default function Guanxin() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-2xl font-serif font-bold text-foreground flex items-center justify-center gap-2">
@@ -291,12 +291,15 @@ export default function Guanxin() {
               <BookHeart className="h-4 w-4" /> 觀心書
             </TabsTrigger>
             <TabsTrigger value="actions" className="gap-2">
-              <ListChecks className="h-4 w-4" /> 行動方案
+              <ListChecks className="h-4 w-4" /> 行動方案 / 感覺
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="actions" className="mt-6 space-y-6">
-            <ActionPlanPanel />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ActionPlanPanel />
+              <FeelingPracticePanel />
+            </div>
             <RecurringActionsPanel />
           </TabsContent>
 
