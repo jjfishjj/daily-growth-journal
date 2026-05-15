@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHabits, useDailyEntries, useSaveDailyEntry } from '@/hooks/useHabits';
+import { useSaveDailyFeelings, summarizeFeelings } from '@/hooks/useFeelings';
+import { FeelingsSelector } from '@/components/feelings/FeelingsSelector';
 import { toast } from 'sonner';
 import { CalendarDays, Save, Loader2, Plus, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -26,6 +28,36 @@ export default function Today() {
   const [habitStates, setHabitStates] = useState<Record<string, HabitState>>({});
   const [overallComment, setOverallComment] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedFeelings, setSelectedFeelings] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const saveFeelings = useSaveDailyFeelings();
+
+  const toggleFeeling = (f: string) => {
+    setSelectedFeelings((prev) =>
+      prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
+    );
+  };
+
+  const handleAiSummarize = async () => {
+    if (!overallComment.trim()) {
+      toast.error('請先填寫今日觀心紀錄');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const result = await summarizeFeelings(overallComment);
+      if (result.length === 0) {
+        toast.info('AI 未能從文字中辨識出感覺，請手動點選');
+      } else {
+        setSelectedFeelings((prev) => Array.from(new Set([...prev, ...result])));
+        toast.success(`AI 摘要完成，已加入 ${result.length} 個感覺`);
+      }
+    } catch (e: any) {
+      toast.error('AI 摘要失敗', { description: e?.message });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Initialize with empty states for new entry
   useEffect(() => {
@@ -72,13 +104,20 @@ export default function Today() {
     }
 
     try {
-      await saveMutation.mutateAsync({
+      const entry = await saveMutation.mutateAsync({
         date: today,
         overallComment,
         habitRecords
       });
+      if (selectedFeelings.length > 0 && entry?.id) {
+        try {
+          await saveFeelings.mutateAsync({ dailyEntryId: entry.id, feelings: selectedFeelings });
+        } catch (e) {
+          console.error('save feelings failed', e);
+        }
+      }
       toast.success('儲存成功！', { description: '新紀錄已保存' });
-      
+
       // Reset form for new entry
       const resetStates: Record<string, HabitState> = {};
       habits.forEach(habit => {
@@ -86,6 +125,7 @@ export default function Today() {
       });
       setHabitStates(resetStates);
       setOverallComment('');
+      setSelectedFeelings([]);
     } catch (error) {
       toast.error('儲存失敗', { description: '請稍後再試' });
     }
@@ -112,7 +152,7 @@ export default function Today() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -186,7 +226,21 @@ export default function Today() {
         {/* Daily Guanxin Note (moved to top) */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-medium">每日觀心紀錄</CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle className="text-lg font-medium">每日觀心紀錄</CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleAiSummarize}
+                disabled={aiLoading}
+                className="text-xs h-7"
+              >
+                {aiLoading ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : null}
+                AI 摘要感覺
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -225,47 +279,58 @@ export default function Today() {
           </CardContent>
         </Card>
 
-        {/* Habits List */}
-        <div className="space-y-3">
-          {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Skeleton className="h-6 w-10 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-4 w-48" />
+        {/* Habits + Feelings (2-col on md+) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Habits List (left) */}
+          <div className="space-y-3">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <Skeleton className="h-6 w-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            habits?.map((habit, index) => (
-              <div
-                key={habit.id}
-                className="animate-slide-up"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <HabitCard
-                  habit={habit}
-                  completed={habitStates[habit.id]?.completed ?? false}
-                  score={habitStates[habit.id]?.score ?? null}
-                  note={habitStates[habit.id]?.note ?? ''}
-                  onCompletedChange={(completed) => 
-                    updateHabit(habit.id, { completed })
-                  }
-                  onScoreChange={(score) => 
-                    updateHabit(habit.id, { score })
-                  }
-                  onNoteChange={(note) => 
-                    updateHabit(habit.id, { note })
-                  }
-                />
-              </div>
-            ))
-          )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              habits?.map((habit, index) => (
+                <div
+                  key={habit.id}
+                  className="animate-slide-up"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <HabitCard
+                    habit={habit}
+                    completed={habitStates[habit.id]?.completed ?? false}
+                    score={habitStates[habit.id]?.score ?? null}
+                    note={habitStates[habit.id]?.note ?? ''}
+                    onCompletedChange={(completed) =>
+                      updateHabit(habit.id, { completed })
+                    }
+                    onScoreChange={(score) =>
+                      updateHabit(habit.id, { score })
+                    }
+                    onNoteChange={(note) =>
+                      updateHabit(habit.id, { note })
+                    }
+                  />
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Feelings (right) */}
+          <div className="md:sticky md:top-4 md:self-start">
+            <FeelingsSelector
+              selected={selectedFeelings}
+              onToggle={toggleFeeling}
+            />
+          </div>
         </div>
 
 
