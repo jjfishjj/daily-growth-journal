@@ -104,13 +104,20 @@ export default function Today() {
     }
 
     try {
-      await saveMutation.mutateAsync({
+      const entry = await saveMutation.mutateAsync({
         date: today,
         overallComment,
         habitRecords
       });
+      if (selectedFeelings.length > 0 && entry?.id) {
+        try {
+          await saveFeelings.mutateAsync({ dailyEntryId: entry.id, feelings: selectedFeelings });
+        } catch (e) {
+          console.error('save feelings failed', e);
+        }
+      }
       toast.success('儲存成功！', { description: '新紀錄已保存' });
-      
+
       // Reset form for new entry
       const resetStates: Record<string, HabitState> = {};
       habits.forEach(habit => {
@@ -118,6 +125,7 @@ export default function Today() {
       });
       setHabitStates(resetStates);
       setOverallComment('');
+      setSelectedFeelings([]);
     } catch (error) {
       toast.error('儲存失敗', { description: '請稍後再試' });
     }
