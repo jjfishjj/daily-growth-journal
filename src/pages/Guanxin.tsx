@@ -18,6 +18,7 @@ import { parseToDoFromContent, useCreateAction, useGuanxinActions } from '@/hook
 import { useGuanxinEntryDateMap } from '@/hooks/useGuanxin';
 import { ActionPlanPanel } from '@/components/guanxin/ActionPlanPanel';
 import { RecurringActionsPanel } from '@/components/guanxin/RecurringActionsPanel';
+import { FeelingPracticePanel } from '@/components/guanxin/FeelingPracticePanel';
 import { similarity, SIMILARITY_THRESHOLD } from '@/lib/actionSimilarity';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
