@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHabits, useDailyEntries, useSaveDailyEntry } from '@/hooks/useHabits';
+import { useSaveDailyFeelings, summarizeFeelings } from '@/hooks/useFeelings';
+import { FeelingsSelector } from '@/components/feelings/FeelingsSelector';
 import { toast } from 'sonner';
 import { CalendarDays, Save, Loader2, Plus, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
