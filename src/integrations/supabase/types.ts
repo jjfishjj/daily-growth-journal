@@ -109,6 +109,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_feeling_records: {
+        Row: {
+          created_at: string
+          daily_entry_id: string
+          feeling: string
+          id: string
+          intensity: number | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          daily_entry_id: string
+          feeling: string
+          id?: string
+          intensity?: number | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          daily_entry_id?: string
+          feeling?: string
+          id?: string
+          intensity?: number | null
+          source?: string
+        }
+        Relationships: []
+      }
       daily_habit_records: {
         Row: {
           completed: boolean
@@ -650,6 +677,42 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      guanxin_feeling_practices: {
+        Row: {
+          created_at: string
+          feeling: string
+          guanxin_entry_id: string | null
+          id: string
+          is_practiced: boolean
+          note: string | null
+          practiced_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feeling: string
+          guanxin_entry_id?: string | null
+          id?: string
+          is_practiced?: boolean
+          note?: string | null
+          practiced_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feeling?: string
+          guanxin_entry_id?: string | null
+          id?: string
+          is_practiced?: boolean
+          note?: string | null
+          practiced_at?: string | null
           updated_at?: string
           user_id?: string
         }
