@@ -28,6 +28,36 @@ export default function Today() {
   const [habitStates, setHabitStates] = useState<Record<string, HabitState>>({});
   const [overallComment, setOverallComment] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedFeelings, setSelectedFeelings] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const saveFeelings = useSaveDailyFeelings();
+
+  const toggleFeeling = (f: string) => {
+    setSelectedFeelings((prev) =>
+      prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
+    );
+  };
+
+  const handleAiSummarize = async () => {
+    if (!overallComment.trim()) {
+      toast.error('請先填寫今日觀心紀錄');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const result = await summarizeFeelings(overallComment);
+      if (result.length === 0) {
+        toast.info('AI 未能從文字中辨識出感覺，請手動點選');
+      } else {
+        setSelectedFeelings((prev) => Array.from(new Set([...prev, ...result])));
+        toast.success(`AI 摘要完成，已加入 ${result.length} 個感覺`);
+      }
+    } catch (e: any) {
+      toast.error('AI 摘要失敗', { description: e?.message });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Initialize with empty states for new entry
   useEffect(() => {
