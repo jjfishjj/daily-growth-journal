@@ -370,6 +370,96 @@ export default function Stats() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        {/* 感覺統計 */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="font-serif text-xl font-semibold">感覺統計</h2>
+            <span className="text-xs text-muted-foreground ml-auto">
+              共 {totalFeelings} 次{topFeeling && topFeeling.次數 > 0 ? `・最常出現：${topFeeling.name}` : ''}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>感覺出現次數</CardTitle>
+                <CardDescription>選定期間內各感覺的累計次數</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={feelingCounts} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis type="number" allowDecimals={false} className="text-xs" />
+                    <YAxis dataKey="name" type="category" width={70} className="text-xs" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="次數" radius={4}>
+                      {feelingCounts.map((_, i) => (
+                        <Cell key={i} fill={FEELING_PALETTE[i % FEELING_PALETTE.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>感覺分佈</CardTitle>
+                <CardDescription>整體感覺的佔比</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={feelingCounts.filter(f => f.次數 > 0)}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => percent > 0.06 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                      outerRadius={100}
+                      dataKey="次數"
+                    >
+                      {feelingCounts.filter(f => f.次數 > 0).map((f, i) => (
+                        <Cell key={f.name} fill={FEELING_PALETTE[FEELINGS.indexOf(f.name as any) % FEELING_PALETTE.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>感覺趨勢變化</CardTitle>
+              <CardDescription>每日各感覺出現的次數變化</CardDescription>
+            </CardHeader>
+            <CardContent className="h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={feelingTrend}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="date" className="text-xs" />
+                  <YAxis allowDecimals={false} className="text-xs" />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  {FEELINGS.map((f, i) => (
+                    <Line
+                      key={f}
+                      type="monotone"
+                      dataKey={f}
+                      stroke={FEELING_PALETTE[i % FEELING_PALETTE.length]}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );
