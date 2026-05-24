@@ -4,12 +4,19 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useStats, useHabits } from '@/hooks/useHabits';
+import { useDailyFeelings } from '@/hooks/useFeelings';
+import { FEELINGS } from '@/lib/feelings';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, RadarChart, PolarGrid, 
-  PolarAngleAxis, PolarRadiusAxis, Radar 
+  PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
-import { BarChart3, TrendingUp, Target, Flame, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Flame, Calendar, Sparkles } from 'lucide-react';
+
+const FEELING_PALETTE = [
+  '#ec4899', '#f59e0b', '#3b82f6', '#14b8a6', '#f97316',
+  '#f43f5e', '#10b981', '#6366f1', '#a855f7', '#d946ef',
+];
 
 const timeRanges = [
   { label: '7天', days: 7 },
