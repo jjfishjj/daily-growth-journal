@@ -4,12 +4,19 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useStats, useHabits } from '@/hooks/useHabits';
+import { useDailyFeelings } from '@/hooks/useFeelings';
+import { FEELINGS } from '@/lib/feelings';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   LineChart, Line, PieChart, Pie, Cell, RadarChart, PolarGrid, 
-  PolarAngleAxis, PolarRadiusAxis, Radar 
+  PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
-import { BarChart3, TrendingUp, Target, Flame, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Flame, Calendar, Sparkles } from 'lucide-react';
+
+const FEELING_PALETTE = [
+  '#ec4899', '#f59e0b', '#3b82f6', '#14b8a6', '#f97316',
+  '#f43f5e', '#10b981', '#6366f1', '#a855f7', '#d946ef',
+];
 
 const timeRanges = [
   { label: '7天', days: 7 },
@@ -35,6 +42,51 @@ export default function Stats() {
   
   const { data: entries } = useStats(startDate, endDate);
   const { data: habits } = useHabits();
+  const entryIds = useMemo(() => entries?.map(e => e.id) ?? [], [entries]);
+  const { data: feelingRecords } = useDailyFeelings(entryIds);
+
+  // Map entry id -> date for feeling trend grouping
+  const entryDateMap = useMemo(() => {
+    const m = new Map<string, string>();
+    entries?.forEach(e => m.set(e.id, e.date));
+    return m;
+  }, [entries]);
+
+  // 感覺出現次數
+  const feelingCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    FEELINGS.forEach(f => { counts[f] = 0; });
+    feelingRecords?.forEach(r => {
+      if (counts[r.feeling] !== undefined) counts[r.feeling]++;
+      else counts[r.feeling] = (counts[r.feeling] ?? 0) + 1;
+    });
+    return FEELINGS.map(f => ({ name: f, 次數: counts[f] || 0 }));
+  }, [feelingRecords]);
+
+  // 感覺趨勢: 每日各感覺的次數
+  const feelingTrend = useMemo(() => {
+    if (!entries) return [];
+    const byDate: Record<string, Record<string, number>> = {};
+    entries.forEach(e => {
+      byDate[e.date] = {};
+      FEELINGS.forEach(f => { byDate[e.date][f] = 0; });
+    });
+    feelingRecords?.forEach(r => {
+      const date = entryDateMap.get(r.daily_entry_id);
+      if (!date || !byDate[date]) return;
+      byDate[date][r.feeling] = (byDate[date][r.feeling] || 0) + 1;
+    });
+    return entries.map(e => ({
+      date: format(new Date(e.date), 'M/d'),
+      ...byDate[e.date],
+    }));
+  }, [entries, feelingRecords, entryDateMap]);
+
+  const totalFeelings = feelingRecords?.length ?? 0;
+  const topFeeling = useMemo(
+    () => [...feelingCounts].sort((a, b) => b.次數 - a.次數)[0],
+    [feelingCounts]
+  );
 
   // Daily average scores chart data
   const chartData = useMemo(() => {
@@ -318,6 +370,96 @@ export default function Stats() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        {/* 感覺統計 */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="font-serif text-xl font-semibold">感覺統計</h2>
+            <span className="text-xs text-muted-foreground ml-auto">
+              共 {totalFeelings} 次{topFeeling && topFeeling.次數 > 0 ? `・最常出現：${topFeeling.name}` : ''}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>感覺出現次數</CardTitle>
+                <CardDescription>選定期間內各感覺的累計次數</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={feelingCounts} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis type="number" allowDecimals={false} className="text-xs" />
+                    <YAxis dataKey="name" type="category" width={70} className="text-xs" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                    <Bar dataKey="次數" radius={4}>
+                      {feelingCounts.map((_, i) => (
+                        <Cell key={i} fill={FEELING_PALETTE[i % FEELING_PALETTE.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>感覺分佈</CardTitle>
+                <CardDescription>整體感覺的佔比</CardDescription>
+              </CardHeader>
+              <CardContent className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={feelingCounts.filter(f => f.次數 > 0)}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => percent > 0.06 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                      outerRadius={100}
+                      dataKey="次數"
+                    >
+                      {feelingCounts.filter(f => f.次數 > 0).map((f, i) => (
+                        <Cell key={f.name} fill={FEELING_PALETTE[FEELINGS.indexOf(f.name as any) % FEELING_PALETTE.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>感覺趨勢變化</CardTitle>
+              <CardDescription>每日各感覺出現的次數變化</CardDescription>
+            </CardHeader>
+            <CardContent className="h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={feelingTrend}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="date" className="text-xs" />
+                  <YAxis allowDecimals={false} className="text-xs" />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  {FEELINGS.map((f, i) => (
+                    <Line
+                      key={f}
+                      type="monotone"
+                      dataKey={f}
+                      stroke={FEELING_PALETTE[i % FEELING_PALETTE.length]}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );
