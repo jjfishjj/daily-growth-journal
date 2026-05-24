@@ -42,6 +42,51 @@ export default function Stats() {
   
   const { data: entries } = useStats(startDate, endDate);
   const { data: habits } = useHabits();
+  const entryIds = useMemo(() => entries?.map(e => e.id) ?? [], [entries]);
+  const { data: feelingRecords } = useDailyFeelings(entryIds);
+
+  // Map entry id -> date for feeling trend grouping
+  const entryDateMap = useMemo(() => {
+    const m = new Map<string, string>();
+    entries?.forEach(e => m.set(e.id, e.date));
+    return m;
+  }, [entries]);
+
+  // 感覺出現次數
+  const feelingCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    FEELINGS.forEach(f => { counts[f] = 0; });
+    feelingRecords?.forEach(r => {
+      if (counts[r.feeling] !== undefined) counts[r.feeling]++;
+      else counts[r.feeling] = (counts[r.feeling] ?? 0) + 1;
+    });
+    return FEELINGS.map(f => ({ name: f, 次數: counts[f] || 0 }));
+  }, [feelingRecords]);
+
+  // 感覺趨勢: 每日各感覺的次數
+  const feelingTrend = useMemo(() => {
+    if (!entries) return [];
+    const byDate: Record<string, Record<string, number>> = {};
+    entries.forEach(e => {
+      byDate[e.date] = {};
+      FEELINGS.forEach(f => { byDate[e.date][f] = 0; });
+    });
+    feelingRecords?.forEach(r => {
+      const date = entryDateMap.get(r.daily_entry_id);
+      if (!date || !byDate[date]) return;
+      byDate[date][r.feeling] = (byDate[date][r.feeling] || 0) + 1;
+    });
+    return entries.map(e => ({
+      date: format(new Date(e.date), 'M/d'),
+      ...byDate[e.date],
+    }));
+  }, [entries, feelingRecords, entryDateMap]);
+
+  const totalFeelings = feelingRecords?.length ?? 0;
+  const topFeeling = useMemo(
+    () => [...feelingCounts].sort((a, b) => b.次數 - a.次數)[0],
+    [feelingCounts]
+  );
 
   // Daily average scores chart data
   const chartData = useMemo(() => {
