@@ -12,6 +12,7 @@ import {
   PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
 import { BarChart3, TrendingUp, Target, Flame, Calendar, Sparkles } from 'lucide-react';
+import { DataDownload }  from '@/components/admin/DownloadButtons';
 
 const FEELING_PALETTE = [
   '#ec4899', '#f59e0b', '#3b82f6', '#14b8a6', '#f97316',
