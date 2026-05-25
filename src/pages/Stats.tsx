@@ -374,12 +374,23 @@ export default function Stats() {
 
         {/* 感覺統計 */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Sparkles className="h-5 w-5 text-primary" />
             <h2 className="font-serif text-xl font-semibold">感覺統計</h2>
             <span className="text-xs text-muted-foreground ml-auto">
               共 {totalFeelings} 次{topFeeling && topFeeling.次數 > 0 ? `・最常出現：${topFeeling.name}` : ''}
             </span>
+            <div className="flex gap-2">
+              <DataDownload
+                data={feelingCounts}
+                filename={`感覺次數統計_${startDate}_${endDate}`}
+                headers={['name', '次數']}
+              />
+              <DataDownload
+                data={feelingTrend}
+                filename={`感覺每日趨勢_${startDate}_${endDate}`}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
