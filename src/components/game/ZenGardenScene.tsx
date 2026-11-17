@@ -62,7 +62,75 @@ function Pond({ progress }: { progress: number }) {
   );
 }
 
-export default function ZenGardenScene({ items, onToggle }: { items: LanternItem[]; onToggle: (id: string) => void }) {
+function rand(i: number) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+
+function Tree({ position, scale }: { position: [number, number, number]; scale: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0.6, 0]} castShadow><cylinderGeometry args={[0.1, 0.15, 1.2, 6]} /><meshStandardMaterial color="#6b4f3a" roughness={1} /></mesh>
+      <mesh position={[0, 1.5, 0]} castShadow><icosahedronGeometry args={[0.7, 0]} /><meshStandardMaterial color="#6f8f5a" flatShading roughness={0.9} /></mesh>
+      <mesh position={[0.3, 1.9, 0.1]} castShadow><icosahedronGeometry args={[0.45, 0]} /><meshStandardMaterial color="#e8a8b8" flatShading roughness={0.9} /></mesh>
+    </group>
+  );
+}
+
+const FLOWER_COLORS = ["#e98a9b", "#f2c14e", "#f6f1e7", "#b78fd6", "#ef8f5a"];
+function Flower({ position, color }: { position: [number, number, number]; color: string }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.12, 0]}><cylinderGeometry args={[0.015, 0.015, 0.24, 4]} /><meshStandardMaterial color="#5c7a45" /></mesh>
+      <mesh position={[0, 0.26, 0]}><dodecahedronGeometry args={[0.07, 0]} /><meshStandardMaterial color={color} flatShading /></mesh>
+    </group>
+  );
+}
+
+function Growth({ streak, radius }: { streak: number; radius: number }) {
+  const flowers = Math.min(streak * 3, 90);
+  const trees = Math.min(Math.floor(streak / 3), 16);
+  return (
+    <group>
+      {Array.from({ length: flowers }, (_, i) => {
+        const a = rand(i) * Math.PI * 2, r = 2.4 + rand(i + 50) * (radius - 3);
+        return <Flower key={"f" + i} color={FLOWER_COLORS[i % 5]} position={[Math.sin(a) * r, 0, Math.cos(a) * r]} />;
+      })}
+      {Array.from({ length: trees }, (_, i) => {
+        const a = (i / Math.max(trees, 1)) * Math.PI * 2 + 0.3, r = radius + 2.2 + rand(i + 9) * 2;
+        return <Tree key={"t" + i} scale={0.8 + rand(i + 3) * 0.6} position={[Math.sin(a) * r, 0, Math.cos(a) * r]} />;
+      })}
+    </group>
+  );
+}
+
+function Celebration() {
+  const ref = useRef<THREE.Points>(null);
+  const N = 300;
+  const { pos, vel } = useMemo(() => {
+    const pos = new Float32Array(N * 3), vel = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      pos[i * 3 + 1] = 0.8;
+      const a = Math.random() * Math.PI * 2, s = 1 + Math.random() * 3;
+      vel[i * 3] = Math.cos(a) * s; vel[i * 3 + 1] = 3 + Math.random() * 4; vel[i * 3 + 2] = Math.sin(a) * s;
+    }
+    return { pos, vel };
+  }, []);
+  useFrame((_, d) => {
+    const dt = Math.min(d, 0.05);
+    for (let i = 0; i < N; i++) {
+      vel[i * 3 + 1] -= 2.5 * dt;
+      for (let k = 0; k < 3; k++) pos[i * 3 + k] += vel[i * 3 + k] * dt;
+      if (pos[i * 3 + 1] < 0) { pos[i * 3] = 0; pos[i * 3 + 1] = 0.8; pos[i * 3 + 2] = 0; }
+    }
+    if (ref.current) ref.current.geometry.attributes.position.needsUpdate = true;
+  });
+  return (
+    <points ref={ref}>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[pos, 3]} /></bufferGeometry>
+      <pointsMaterial size={0.15} color="#ffcf7a" transparent opacity={0.9} />
+    </points>
+  );
+}
+
+export default function ZenGardenScene({ items, onToggle, streak = 0, celebrate = false }: { items: LanternItem[]; onToggle: (id: string) => void; streak?: number; celebrate?: boolean }) {
   const radius = Math.max(4.5, items.length * 0.42);
   const progress = items.length ? items.filter((i) => i.lit).length / items.length : 0;
   return (
@@ -77,6 +145,8 @@ export default function ZenGardenScene({ items, onToggle }: { items: LanternItem
       </Environment>
       <Ground />
       <Pond progress={progress} />
+      <Growth streak={streak} radius={radius} />
+      {celebrate && <Celebration />}
       {items.map((it, i) => {
         const a = (i / items.length) * Math.PI * 2;
         return <Lantern key={it.id} item={it} onToggle={onToggle} position={[Math.sin(a) * radius, 0, Math.cos(a) * radius]} />;

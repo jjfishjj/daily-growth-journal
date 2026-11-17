@@ -1233,6 +1233,7 @@ export type Database = {
         Args: { _user_a: string; _user_b: string }
         Returns: number
       }
+      claim_garden_bonus: { Args: never; Returns: Json }
       complete_action: { Args: { _action_id: string }; Returns: Json }
       complete_declutter: {
         Args: { _item_id: string; _reflection?: string }
